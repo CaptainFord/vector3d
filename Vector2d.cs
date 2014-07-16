@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 namespace UnityEngine {
     public struct Vector2d {
         public const double kEpsilon = 1E-05d;
+		public const double degreesPerRadian = 57.29578d;
         public double x;
         public double y;
 
@@ -18,7 +19,7 @@ namespace UnityEngine {
                     case 1:
                         return this.y;
                     default:
-                        throw new IndexOutOfRangeException("Invalid Vector2d index!");
+                        throw new IndexOutOfRangeException("Invalid Vector2d index! (" + index + ")");
                 }
             }
             set {
@@ -30,7 +31,7 @@ namespace UnityEngine {
                         this.y = value;
                         break;
                     default:
-                        throw new IndexOutOfRangeException("Invalid Vector2d index!");
+						throw new IndexOutOfRangeException("Invalid Vector2d index! (" + index + ")");
                 }
             }
         }
@@ -72,12 +73,22 @@ namespace UnityEngine {
                 return new Vector2d(0.0d, 1d);
             }
         }
+		public static Vector2d down {
+			get {
+				return new Vector2d(0.0d, -1d);
+			}
+		}
 
         public static Vector2d right {
             get {
                 return new Vector2d(1d, 0.0d);
             }
         }
+		public static Vector2d left {
+			get {
+				return new Vector2d(-1d, 0.0d);
+			}
+		}
 
         public Vector2d(double x, double y) {
             this.x = x;
@@ -173,7 +184,10 @@ namespace UnityEngine {
       __Boxed<double> local2 = (ValueType) this.y;
       objArray[index2] = (object) local2;
       */
-            return "not implemented";
+			//	I don't understand how boxed types could be an issue.
+			//	They can't be null. How strange.
+			return "(" + x + "," + y + ")";
+//            return "not implemented";
         }
 
         public string ToString(string format) {
@@ -187,6 +201,7 @@ namespace UnityEngine {
       string str2 = this.y.ToString(format);
       objArray[index2] = (object) str2;
       */
+			return "(" + x.ToString(format) + "," + y.ToString(format) + ")";
             return "not implemented";
         }
 
@@ -209,7 +224,7 @@ namespace UnityEngine {
         }
 
         public static double Angle(Vector2d from, Vector2d to) {
-            return Mathd.Acos(Mathd.Clamp(Vector2d.Dot(from.normalized, to.normalized), -1d, 1d)) * 57.29578d;
+			return Mathd.Acos(Mathd.Clamp(Vector2d.Dot(from.normalized, to.normalized), -1d, 1d)) * degreesPerRadian;
         }
 
         public static double Distance(Vector2d a, Vector2d b) {
@@ -217,10 +232,11 @@ namespace UnityEngine {
         }
 
         public static Vector2d ClampMagnitude(Vector2d vector, double maxLength) {
-            if (vector.sqrMagnitude > maxLength * maxLength)
+            if (vector.sqrMagnitude > maxLength * maxLength) {
                 return vector.normalized * maxLength;
-            else
+			} else {
                 return vector;
+			}
         }
 
         public static double SqrMagnitude(Vector2d a) {
@@ -231,6 +247,7 @@ namespace UnityEngine {
             return (this.x * this.x + this.y * this.y);
         }
 
+
         public static Vector2d Min(Vector2d lhs, Vector2d rhs) {
             return new Vector2d(Mathd.Min(lhs.x, rhs.x), Mathd.Min(lhs.y, rhs.y));
         }
@@ -238,5 +255,13 @@ namespace UnityEngine {
         public static Vector2d Max(Vector2d lhs, Vector2d rhs) {
             return new Vector2d(Mathd.Max(lhs.x, rhs.x), Mathd.Max(lhs.y, rhs.y));
         }
+		//	Why do it as static? I guess that kind of makes sense. But it also 
+		//	makes for longer code.
+		public Vector2d Min(Vector2d rhs) {
+			return new Vector2d(Mathd.Min(x, rhs.x), Mathd.Min(y, rhs.y));
+		}
+		public Vector2d Max(Vector2d rhs) {
+			return new Vector2d(Mathd.Max(x, rhs.x), Mathd.Max(y, rhs.y));
+		}
     }
 }
