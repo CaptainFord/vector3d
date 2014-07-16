@@ -165,10 +165,11 @@ namespace UnityEngine {
 
         public void Normalize() {
             double magnitude = this.magnitude;
-            if (magnitude > 9.99999974737875E-06)
+            if (magnitude > 9.99999974737875E-06) {
                 this = this / magnitude;
-            else
+			} else {
                 this = Vector2d.zero;
+			}
         }
 
         public override string ToString() {
@@ -186,7 +187,12 @@ namespace UnityEngine {
       */
 			//	I don't understand how boxed types could be an issue.
 			//	They can't be null. How strange.
+			//	Wait ... in reading online, what I'm seeing is performance issues
+			//	related to using String.format(0) http://www.techgalaxy.net/Docs/Dev/5ways.htm
+			//	So ... the problem was that he didn't just do this...?
 			return "(" + x + "," + y + ")";
+			//	...huh...
+
 //            return "not implemented";
         }
 
