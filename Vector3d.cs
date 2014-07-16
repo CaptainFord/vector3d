@@ -6,7 +6,8 @@ using System.Runtime.CompilerServices;
 
 namespace UnityEngine {
     public struct Vector3d {
-        public const float kEpsilon = 1E-05f;
+		public const float kEpsilon = 1E-05f;
+		public const double degreesPerRadian = 57.2957795130823;
         public double x;
         public double y;
         public double z;
@@ -315,6 +316,12 @@ namespace UnityEngine {
             return "(" + this.x + ", " + this.y + ", " + this.z + ")";
         }
 
+		public override string ToString(String numberFormat) {
+			return "(" + this.x.ToString(numberFormat) + ", " 
+				+ this.y.ToString(numberFormat) + ", " 
+				+ this.z.ToString(numberFormat) + ")";
+		}
+
         public static double Dot(Vector3d lhs, Vector3d rhs) {
             return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
         }
@@ -334,7 +341,7 @@ namespace UnityEngine {
         }
 
         public static double Angle(Vector3d from, Vector3d to) {
-            return Mathd.Acos(Mathd.Clamp(Vector3d.Dot(from.normalized, to.normalized), -1d, 1d)) * 57.29578d;
+			return Mathd.Acos(Mathd.Clamp(Vector3d.Dot(from.normalized, to.normalized), -1d, 1d)) * degreesPerRadian;
         }
 
         public static double Distance(Vector3d a, Vector3d b) {

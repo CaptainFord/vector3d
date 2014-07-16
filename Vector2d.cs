@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace UnityEngine {
     public struct Vector2d {
         public const double kEpsilon = 1E-05d;
-		public const double degreesPerRadian = 57.29578d;
+		public const double degreesPerRadian = 57.2957795130823;
         public double x;
         public double y;
 
@@ -193,7 +193,11 @@ namespace UnityEngine {
 			return "(" + x + "," + y + ")";
 			//	...huh...
 
-//            return "not implemented";
+			//	So he was worried about performance problems.
+			//	Well, this implementation isn't going to cause any performance problems.
+			//	I'm pretty damn sure that it internally converts a multiple addition expression
+			//	to use StringBuilder internally, so there's no bottleneck here as long as I
+			//	put it all on one line. (And maybe even if it's done on multiple lines)
         }
 
         public string ToString(string format) {
@@ -208,7 +212,7 @@ namespace UnityEngine {
       objArray[index2] = (object) str2;
       */
 			return "(" + x.ToString(format) + "," + y.ToString(format) + ")";
-            return "not implemented";
+//            return "not implemented";
         }
 
         public override int GetHashCode() {
