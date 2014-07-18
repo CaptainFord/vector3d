@@ -18,10 +18,11 @@ namespace UnityTest {
 //		const double defaultToleranceFactor = 1.19209289550781E-07;
 
 		const int numberOfTestItems = 12;
-		const int expandedNumberOfTestItems = 64;
+		const int expandedNumberOfTestItems = 513;
 
 		TestItemSet[] testItemSets;
 		Dictionary<string,int[]> combos = new Dictionary<string, int[]>();
+		List<int> list = new List<int>();
 
 		public struct TestItemSet {
 			public Quaternion fq0, fq1;
@@ -36,7 +37,7 @@ namespace UnityTest {
 		public QuaterniondTests ()
 		{
 			System.Random rand = new System.Random("large traffic cones".GetHashCode());
-			rand = new System.Random();
+//			rand = new System.Random();
 			testItemSets = new TestItemSet[expandedNumberOfTestItems];
 			for(int i=0; i<expandedNumberOfTestItems; ++i){
 				testItemSets[i] = GenerateTestItemSet(i, rand);
@@ -156,16 +157,20 @@ namespace UnityTest {
 			q.SetFromToRotation(set.fv0, set.fv1);
 			qd.SetFromToRotation(set.dv0, set.dv1);
 
+			if(testIndex == 370){
+				Debug.Log (q +", " + qd);
+			}
+
 			if(testIndex == expandedNumberOfTestItems - 1){
 				DisplayCombos();
 			}
 
-			AddOne(set, false);
-			AssertSimilar(q, qd, "vectors: " + set.fv0 + ", " + set.fv1);
-			AddOne(set, true);
+			AddOne(q, qd, testIndex, false);
+			AssertSimilar(q, qd, 2d, "vectors: " + set.fv0 + ", " + set.fv1);
+			AddOne(q, qd, testIndex, true);
 
-			AssertSimilar(set.fv1.normalized, (q * set.fv0).normalized, 4d);
-			AssertSimilar(set.dv1.normalized, (qd * set.dv0).normalized, 4d);
+//			AssertSimilar(set.fv1.normalized, (q * set.fv0).normalized, 4d);
+//			AssertSimilar(set.dv1.normalized, (qd * set.dv0).normalized, 4d);
 		}
 		void DisplayCombos(){
 			StringBuilder builder = new StringBuilder();
@@ -200,6 +205,39 @@ namespace UnityTest {
 				++nums[0];
 			} else {
 				++nums[1];
+			}
+		}
+		void AddOne(Quaternion q, Quaterniond qd, int testIndex, bool passed){
+			string key = "";
+			for(int i=0; i<4; ++i){
+				if(q[i] < 0){
+					key += "-";
+				} else {
+					key += "+";
+				}
+			}
+//			for(int i=0; i<4; ++i){
+//				if(qd[i] < 0){
+//					key += "-";
+//				} else {
+//					key += "+";
+//				}
+//			}
+			if(!combos.ContainsKey(key)){
+				combos.Add (key, new int[2]);
+			}
+			int[] nums = combos[key];
+			if(passed){
+				++nums[0];
+			} else {
+				++nums[1];
+			}
+			if(key.Equals("+-++")){
+				if(passed){
+					list.Remove(testIndex);
+				} else {
+					list.Add (testIndex);
+				}
 			}
 		}
 
