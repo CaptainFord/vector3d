@@ -14,8 +14,9 @@ namespace UnityEngine {
 //			if (q == Quaternion.identity)
 //			{
 //				throw new UnityException("This can't be right!");
-//			}
-
+			//			}
+			Debug.Log (Mathd.Cos(Mathd.PI));
+//			Debug.Log (Mathd.Acos(0d) + ", " + Mathd.Acos(1d));
 		}
 		public static void scratchGroundsNotRan(){
 			Quaternion q = new Quaternion();
@@ -134,34 +135,37 @@ namespace UnityEngine {
 		}
 
 		public void ToAngleAxis(out double angle, out Vector3d axis){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
-		}
+			//	http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
+			this.Normalize();
 
-		static void Nothing(){
-			Quaternion q = new Quaternion(), q2 = new Quaternion();
-			float f = 0f;
-			Vector3 v3 = Vector3.zero;
+			double halfAngleInRadians = Mathd.Acos(this.w);
+			double inverseSinAngle = 1.0d / Mathd.Sqrt (1d - this.w * this.w); 	
+//			double inverseSinAngle = 1.0d / Mathd.Sin(halfAngleInRadians);
+			angle = halfAngleInRadians * 2.0d * Mathd.Rad2Deg;
+			axis = new Vector3d(this.x * inverseSinAngle, 
+			                    this.y * inverseSinAngle, 
+			                    this.z * inverseSinAngle).normalized;
 
-			f = Quaternion.Angle(q, q2);
-			q = Quaternion.AngleAxis(f, v3);
-			f = Quaternion.Dot(q, q2);
-			q = Quaternion.Euler(v3);
-			q = Quaternion.Euler(f,f,f);
-//			q = Quaternion.FromToRotation(v3, v3);	//	Implemented via non-static version
-			//		q = Quaternion.identity;	//	Implemented
-			q2 = Quaternion.Inverse(q);
-			q = Quaternion.Lerp(q, q2, f);
-			//		q = Quaternion.LookRotation(v3);	//	Implemented using non-static version
-			//		q = Quaternion.LookRotation(v3, v3);	//	Implemented using non-static version
-			q = Quaternion.RotateTowards(q, q2, f);
-			q = Quaternion.Slerp(q, q2, f);
+			//	Huh, these are the same numbers
+//			Debug.Log (Mathd.Sqrt(1d - this.w * this.w) + " / " + Mathd.Sin(halfAngleInRadians));
 
-			//	Operators
-//			bool b = q == q2;	//	Implemented - But I'm not sure what a good tolerance is.
-//			b = q != q2;	//	Implemented
-			q = q * q;
-			v3 = q * v3;
+			//	Note: According the webpage above, singularities occur at w=-1 and w=1, 
+			//	when the angle is 0 or 180 degrees.
+			//	I don't know if this affects the calculation at all.
+			//	I appear to be getting non-normalized vectors
+
+//			double angleWouldBe = Mathd.Deg2Rad * angle * 0.5d;
+//			Vector3d axisWouldBe = axis.normalized;
+//
+//			Quaterniond result = new Quaterniond();
+//			double sinTheta = Mathd.Sin (angleWouldBe);
+//			result.w = Mathd.Cos (angleWouldBe);
+//			result.x = axisWouldBe.x * sinTheta;
+//			result.y = axisWouldBe.y * sinTheta;
+//			result.z = axisWouldBe.z * sinTheta;
+//
+//			Debug.Log ("angle=" + angle + ";axis=" + axis + ";half= " + halfAngleInRadians + "=>" + angleWouldBe + ";" + axisWouldBe
+//			           + "\nquat=" + this + " => " + result + ";sinTheta=" + Mathd.Sin (halfAngleInRadians) + " =>" + sinTheta + ";sanityCheck=" + (inverseSinAngle * sinTheta));
 		}
 
 		public static double Angle(Quaterniond a, Quaterniond b){
@@ -195,25 +199,9 @@ namespace UnityEngine {
 		public static Quaterniond Euler(double x, double y, double z){
 			return Quaterniond.AngleAxis(y, Vector3d.up)
 				* Quaterniond.AngleAxis(x, Vector3d.right) 
-					* Quaterniond.AngleAxis(z, Vector3d.forward) ;
+					* Quaterniond.AngleAxis(z, Vector3d.forward);
 		}
 
-		//	"Returns a rotation that rotates z degrees around the z axis, 
-		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public static Quaterniond EulerSpecial(double x, double y, double z, 
-		                                       bool rightAxis, bool downAxis, bool backAxis, 
-		                                       int[] order){
-			//	There are 8 possible choices for axises
-			//	There are 6 possible permuations for multiplication order
-			//	I'm going to need to try all of them
-
-			Quaterniond[] quats = {
-				Quaterniond.AngleAxis(z, backAxis ? Vector3d.back : Vector3d.forward),
-				Quaterniond.AngleAxis(x, rightAxis ? Vector3d.right : Vector3d.left),
-				Quaterniond.AngleAxis(y, downAxis ? Vector3d.down : Vector3d.up)
-			};
-			return quats[order[0]] * quats[order[1]] * quats[order[2]];
-		}
 		public static Quaterniond FromToRotation(Vector3d from, Vector3d to){
 			//	TODO Implement Quaterniond methods
 			throw new UnityException("Not Yet Implemented");
@@ -365,6 +353,14 @@ namespace UnityEngine {
 				                       this.z * magnitudeInverse,
 				                       this.w * magnitudeInverse);
 			}
+		}
+
+		public double GetSumOfSquares(){
+			double sum = 0;
+			for(int i=0; i<4; ++i){
+				sum += this[i] * this[i];
+			}
+			return sum;
 		}
 
 	}
