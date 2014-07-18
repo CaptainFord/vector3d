@@ -9,14 +9,65 @@ namespace UnityEngine {
 
 		public static void scratchGrounds(){
 //			Quaternion q = new Quaternion();
-			Quaterniond qd = new Quaterniond();
+//			UnityTest.QuaterniondTests tests = UnityTest.QuaterniondTests();
+			System.Random rand = new System.Random("Nothing at all".GetHashCode());
+			Quaterniond qd0 = RandomQuat(rand);
+			Quaterniond qd1 = RandomQuat(rand);
 
-//			if (q == Quaternion.identity)
-//			{
-//				throw new UnityException("This can't be right!");
-			//			}
-			Debug.Log (Mathd.Cos(Mathd.PI));
-//			Debug.Log (Mathd.Acos(0d) + ", " + Mathd.Acos(1d));
+			//	Okay, here we go
+			Debug.Log ("quats: " + qd0 + " " + qd1);
+			for(int i=0; i<4; ++i){
+				bool aFirst = i > 1;
+				bool inverseA = i % 2 == 0;
+				QuaternionDiffTest(qd0, qd1, aFirst, inverseA);
+			}
+
+			for(int i=0; i<4; ++i){
+				bool aFirst = i > 1;
+				bool checkFirst = i % 2 == 0;
+				QuaternionDiffTest2(qd0, qd1, aFirst, checkFirst);
+			}
+
+		}
+		public static void QuaternionDiffTest2(Quaterniond a, Quaterniond b, bool aFirst, bool checkFirst){
+			Quaterniond stepOne = aFirst ? a.inverse * b : b * a.inverse;
+			string labelOne = aFirst ? "(!a*b)" : "(b*!a)";
+
+			Quaterniond stepTwo = checkFirst ? a * stepOne : stepOne * a;
+			string labelTwo = checkFirst ? "a*" + labelOne : labelOne + "*a";
+			
+			Quaterniond stepThree = checkFirst ? b * stepOne : stepOne * b;
+			string labelThree = checkFirst ? "b*" + labelOne : labelOne + "*b";
+
+			Debug.Log (labelTwo + ": " + stepTwo + " - " + b + "\n" + labelThree + ": " + stepThree + " - " + a);
+		}
+		public static void QuaternionDiffTest(Quaterniond a, Quaterniond b, bool aFirst, bool inverseFirst){
+			bool inverseA = inverseFirst ^ !aFirst;
+			string labelA = "a", labelB = "b";
+			if(inverseA){
+				a = Quaterniond.Inverse(a);
+				labelA = "!a";
+			} else {
+				b = Quaterniond.Inverse(b);
+				labelB = "!b";
+			}
+			if(aFirst){
+				QuaternionDiffTestFinish(a, b, labelA, labelB);
+			} else {
+				QuaternionDiffTestFinish(b, a, labelB, labelA);
+			}
+		}
+		public static void QuaternionDiffTestFinish(Quaterniond a, Quaterniond b, string labelA, string labelB){
+			Quaterniond result = a * b;
+			Debug.Log (labelA + "*" + labelB + "=" + result);
+		}
+			
+			public static Quaterniond RandomQuat(System.Random rand){
+			Quaterniond result = new Quaterniond();
+			for(int i=0; i<4; ++i){
+				result[i] = 2d * rand.NextDouble() - 1d;
+			}
+			return result;
 		}
 		public static void scratchGroundsNotRan(){
 			Quaternion q = new Quaternion();
@@ -130,8 +181,14 @@ namespace UnityEngine {
 		}
 
 		public void SetFromToRotation(Vector3d from, Vector3d to){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+			from = from.normalized;
+			to = to .normalized;
+			Vector3d cross = Vector3d.Cross(from, to);
+			this.x = cross.x;
+			this.y = cross.y;
+			this.z = cross.z;
+			this.w = Mathd.Sqrt(from.sqrMagnitude * to.sqrMagnitude) + Vector3d.Dot(from, to);
+			this.Normalize();
 		}
 
 		public void ToAngleAxis(out double angle, out Vector3d axis){
@@ -168,10 +225,18 @@ namespace UnityEngine {
 //			           + "\nquat=" + this + " => " + result + ";sinTheta=" + Mathd.Sin (halfAngleInRadians) + " =>" + sinTheta + ";sanityCheck=" + (inverseSinAngle * sinTheta));
 		}
 
-		public static double Angle(Quaterniond a, Quaterniond b){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+		public Quaterniond inverse {
+			get {
+				return Quaterniond.Inverse(this);
+			}
 		}
+
+		public static double Angle(Quaterniond a, Quaterniond b){
+			//	The calculation of the angle is part of how ToAngleAxis works
+			double angle = Mathd.Acos((a.inverse * b).w) * 2.0d * Mathd.Rad2Deg;
+			return angle > 180d ? 360d - angle : angle;
+		}
+
 		public static Quaterniond AngleAxis(double angle, Vector3d axis){
 			axis = axis.normalized;
 			angle = Mathd.Deg2Rad * angle * 0.5d;
@@ -186,8 +251,7 @@ namespace UnityEngine {
 			return result;
 		}
 		public static double Dot(Quaterniond a, Quaterniond b){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+			return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
@@ -203,8 +267,12 @@ namespace UnityEngine {
 		}
 
 		public static Quaterniond FromToRotation(Vector3d from, Vector3d to){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+			Quaterniond result = new Quaterniond();
+			result.SetFromToRotation(from, to);
+			return result;
+		}
+		public static Quaterniond FromToRotation(Quaterniond from, Quaterniond to){
+			return Quaterniond.Inverse(from) * to;
 		}
 		public static Quaterniond Inverse(Quaterniond rotation){
 			Quaterniond result = new Quaterniond();
@@ -246,15 +314,7 @@ namespace UnityEngine {
 		}
 
 		public static Quaterniond operator *(Quaterniond lhs, Quaterniond rhs){
-			//	Note: Normalization doesn't matter for this operation.
 			Quaterniond result = new Quaterniond();
-			//	I'm not sure if the real part is w or x. I'm not even sure that it matters.
-//			const int a=3, b=0, c=1, d=2;	//	w is real	//	This was correct	//	Now I can optimize and remove the 16 switch/indexing operations
-//			const int a=0, b=1, c=2, d=3;	//	x is real	//	This doesn't work!
-//			result[a] = lhs[a] * rhs[a] - lhs[b]*rhs[b] - lhs[c]*rhs[c] - lhs[d]*rhs[d];
-//			result[b] = lhs[a] * rhs[b] + lhs[b]*rhs[a] + lhs[c]*rhs[d] - lhs[d]*rhs[c];
-//			result[c] = lhs[a] * rhs[c] - lhs[b]*rhs[d] + lhs[c]*rhs[a] + lhs[d]*rhs[b];
-//			result[d] = lhs[a] * rhs[d] + lhs[b]*rhs[c] - lhs[c]*rhs[b] + lhs[d]*rhs[a];
 			result.w = lhs.w * rhs.w - lhs.x*rhs.x - lhs.y*rhs.y - lhs.z*rhs.z;
 			result.x = lhs.w * rhs.x + lhs.x*rhs.w + lhs.y*rhs.z - lhs.z*rhs.y;
 			result.y = lhs.w * rhs.y - lhs.x*rhs.z + lhs.y*rhs.w + lhs.z*rhs.x;
@@ -263,11 +323,10 @@ namespace UnityEngine {
 		}
 
 		public static Vector3d operator *(Quaterniond lhs, Vector3d rhs){
-			//	Rotation Matrix
-//			double x = lhs.x, y = lhs.y, z = lhs.z, w = lhs.w;
 			return lhs.Multiply(rhs);
 		}
 		Vector3d Multiply(Vector3d rhs){
+			//	Rotation Matrix
 			double[,] rotationMatrix = new double[,] {
 				{1 - 2*y*y - 2*z*z,	2*x*y - 2*z*w,	2*x*z + 2*y*w},
 				{2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z,	2*y*z - 2*x*w},
@@ -281,8 +340,6 @@ namespace UnityEngine {
 				rhs.x * rotationMatrix[2,0] + rhs.y * rotationMatrix[2,1] + rhs.z * rotationMatrix[2,2]
 				);
 			return result;
-//			//	TODO Implement Quaterniond methods
-//			throw new UnityException("Not Yet Implemented");
 		}
 
 		public static Quaterniond operator *(Quaterniond lhs, Quaternion rhs){

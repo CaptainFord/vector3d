@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 using NUnit.Framework;
+using System.Text;
 
 namespace UnityTest {
 
@@ -17,8 +18,10 @@ namespace UnityTest {
 //		const double defaultToleranceFactor = 1.19209289550781E-07;
 
 		const int numberOfTestItems = 12;
+		const int expandedNumberOfTestItems = 64;
 
 		TestItemSet[] testItemSets;
+		Dictionary<string,int[]> combos = new Dictionary<string, int[]>();
 
 		public struct TestItemSet {
 			public Quaternion fq0, fq1;
@@ -33,8 +36,9 @@ namespace UnityTest {
 		public QuaterniondTests ()
 		{
 			System.Random rand = new System.Random("large traffic cones".GetHashCode());
-			testItemSets = new TestItemSet[numberOfTestItems];
-			for(int i=0; i<numberOfTestItems; ++i){
+			rand = new System.Random();
+			testItemSets = new TestItemSet[expandedNumberOfTestItems];
+			for(int i=0; i<expandedNumberOfTestItems; ++i){
 				testItemSets[i] = GenerateTestItemSet(i, rand);
 			}
 		}
@@ -142,7 +146,7 @@ namespace UnityTest {
 		[Test(Description = "SetFromToRotation")]
 		[Category ("SetFromToRotation")]
 		public void TestSetFromToRotation (
-				[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			[NUnit.Framework.Range (0,expandedNumberOfTestItems-1)] int testIndex
 				){
 			TestItemSet set = testItemSets[testIndex];
 
@@ -152,16 +156,51 @@ namespace UnityTest {
 			q.SetFromToRotation(set.fv0, set.fv1);
 			qd.SetFromToRotation(set.dv0, set.dv1);
 
-			AssertSimilar(q, qd);
+			if(testIndex == expandedNumberOfTestItems - 1){
+				DisplayCombos();
+			}
 
-			//	Perform the same test with prior initialization
-			q = set.fq0;
-			qd = set.dq0;
+			AddOne(set, false);
+			AssertSimilar(q, qd, "vectors: " + set.fv0 + ", " + set.fv1);
+			AddOne(set, true);
 
-			q.SetFromToRotation(set.fv0, set.fv1);
-			qd.SetFromToRotation(set.dv0, set.dv1);
-			
-			AssertSimilar(q, qd);
+			AssertSimilar(set.fv1.normalized, (q * set.fv0).normalized, 4d);
+			AssertSimilar(set.dv1.normalized, (qd * set.dv0).normalized, 4d);
+		}
+		void DisplayCombos(){
+			StringBuilder builder = new StringBuilder();
+			foreach(string key in combos.Keys){
+				int[] nums = combos[key];
+				builder.Append(key + ": " + nums[0] + "/" + nums[1] + "\n");
+			}
+			Debug.Log (builder.ToString());
+
+		}
+		void AddOne(TestItemSet set, bool passed){
+			string key = "";
+			for(int i=0; i<3; ++i){
+				if(set.fv0[i] < 0){
+					key += "-";
+				} else {
+					key += "+";
+				}
+			}
+			for(int i=0; i<3; ++i){
+				if(set.fv1[i] < 0){
+					key += "-";
+				} else {
+					key += "+";
+				}
+			}
+			if(!combos.ContainsKey(key)){
+				combos.Add (key, new int[2]);
+			}
+			int[] nums = combos[key];
+			if(passed){
+				++nums[0];
+			} else {
+				++nums[1];
+			}
 		}
 
 		[Test(Description = "SetLookRotation")]
@@ -241,7 +280,7 @@ namespace UnityTest {
 			float fAngle = Quaternion.Angle(set.fq0, set.fq1);
 			double dAngle = Quaterniond.Angle(set.dq0, set.dq1);
 			
-			AssertSimilar(fAngle, dAngle);
+			AssertSimilar(fAngle, dAngle, 1.01d * Mathd.Max(Mathd.Abs(fAngle), Mathd.Abs(dAngle)));
 		}
 
 		[Test(Description = "Static:Dot")]
@@ -480,15 +519,15 @@ namespace UnityTest {
 		void AssertSimilar(float f, double d, String valueName){
 			AssertSimilar(f, d, valueName, 1d);
 		}
-		void AssertSimilar(float f, double d, string valueName, double toleranceBasedOn){
+		void AssertSimilar(double f, double d, string valueName, double toleranceBasedOn){
 			double difference = Mathd.Abs(d - f);
 			double tolerance = Mathd.Abs(toleranceBasedOn * floatPrecision);
-			string debugString = "f=" + f + ", d=" + d + "\n"
-					+ "diff=" + difference + ", tolerance=" + tolerance + "\n"
+			string debugString = "f=" + f + ", \td=" + d + "\n\t"
+				+ "diff=" + difference + ", \ttolerance=" + tolerance + "\n\t"
 					+ "factors= " + (tolerance == 0.0d ? "&#x221E" : (difference / tolerance).ToString())
-					+ " / " + (difference == 0.0d ? "&#x221E" : (tolerance / difference).ToString());
+					+ " \t/\t " + (difference == 0.0d ? "&#x221E" : (tolerance / difference).ToString());
 			if(difference > tolerance){
-				Assert.Fail(valueName + " outside of tolerance (" + debugString + ")", f, d);
+				Assert.Fail(valueName + " outside of tolerance\n\t" + debugString, f, d);
 			} else {
 //				if(difference != 0){
 //					double passFactor = Mathd.Min ((tolerance / floatPrecision), (tolerance / difference));
@@ -500,39 +539,99 @@ namespace UnityTest {
 			}
 		}
 
+		void AssertSimilar(Vector3 f, Vector3 d){
+			AssertSimilar(f, d, 1);
+		}
+		void AssertSimilar(Quaternion f, Quaternion d){
+			AssertSimilar(f, d, 1);
+		}
 		void AssertSimilar(Vector3 f, Vector3d d){
 			AssertSimilar(f, d, 1);
 		}
 		void AssertSimilar(Quaternion f, Quaterniond d){
 			AssertSimilar(f, d, 1);
 		}
-//		void AssertSimilar(Vector3 f, Vector3d d, int numberOfOperations){
-//			AssertSimilar(f, d, numberOfOperations, 1.0d);
-//		}
-//		void AssertSimilar(Quaternion f, Quaterniond d, int numberOfOperations){
-//			AssertSimilar(f, d, numberOfOperations, 1.0d);
-//		}
-//		void AssertSimilar(Vector3 f, Vector3d d, double toleranceBasedOn){
-//			AssertSimilar(f, d, floatPrecision * toleranceBasedOn);
-//		}
-//		void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn){
-//			AssertSimilar(f, d, floatPrecision * toleranceBasedOn);
-//		}
-//		void AssertSimilar(Vector3 f, Vector3d d, int numberOfOperations, double toleranceBasedOn){
-//			AssertSimilar(f, d, numberOfOperations * floatPrecision, toleranceBasedOn);
-//		}
-//		void AssertSimilar(Quaternion f, Quaterniond d, int numberOfOperations, double toleranceBasedOn){
-//			AssertSimilar(f, d, numberOfOperations * floatPrecision, toleranceBasedOn);
-//		}
+		void AssertSimilar(Vector3d f, Vector3d d){
+			AssertSimilar(f, d, 1);
+		}
+		void AssertSimilar(Quaterniond f, Quaterniond d){
+			AssertSimilar(f, d, 1);
+		}
+
+		void AssertSimilar(Vector3 f, Vector3 d, double toleranceBasedOn){
+			AssertSimilar(f, d, toleranceBasedOn, "");
+		}
+		void AssertSimilar(Quaternion f, Quaternion d, double toleranceBasedOn){
+			AssertSimilar(f, d, toleranceBasedOn, "");
+		}
 		void AssertSimilar(Vector3 f, Vector3d d, double toleranceBasedOn){
-			string inputs = "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+			AssertSimilar(f, d, toleranceBasedOn, "");
+		}
+		void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn){
+			AssertSimilar(f, d, toleranceBasedOn, "");
+		}
+		void AssertSimilar(Vector3d f, Vector3d d, double toleranceBasedOn){
+			AssertSimilar(f, d, toleranceBasedOn, "");
+		}
+		void AssertSimilar(Quaterniond f, Quaterniond d, double toleranceBasedOn){
+			AssertSimilar(f, d, toleranceBasedOn, "");
+		}
+
+		void AssertSimilar(Vector3 f, Vector3 d, string additionalInfo){
+			AssertSimilar(f, d, 1d, additionalInfo);
+		}
+		void AssertSimilar(Quaternion f, Quaternion d, string additionalInfo){
+			AssertSimilar(f, d, 1d, additionalInfo);
+		}
+		void AssertSimilar(Vector3 f, Vector3d d, string additionalInfo){
+			AssertSimilar(f, d, 1d, additionalInfo);
+		}
+		void AssertSimilar(Quaternion f, Quaterniond d, string additionalInfo){
+			AssertSimilar(f, d, 1d, additionalInfo);
+		}
+		void AssertSimilar(Vector3d f, Vector3d d, string additionalInfo){
+			AssertSimilar(f, d, 1d, additionalInfo);
+		}
+		void AssertSimilar(Quaterniond f, Quaterniond d, string additionalInfo){
+			AssertSimilar(f, d, 1d, additionalInfo);
+		}
+
+		void AssertSimilar(Vector3 f, Vector3 d, double toleranceBasedOn, string additionalInfo){
+			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
 			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
 			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
 			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
 		}
-		
-		void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn){
-			string inputs = "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+		void AssertSimilar(Quaternion f, Quaternion d, double toleranceBasedOn, string additionalInfo){
+			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
+		}
+
+		void AssertSimilar(Vector3 f, Vector3d d, double toleranceBasedOn, string additionalInfo){
+			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+		}
+		void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn, string additionalInfo){
+			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
+		}
+
+		void AssertSimilar(Vector3d f, Vector3d d, double toleranceBasedOn, string additionalInfo){
+			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+		}
+		void AssertSimilar(Quaterniond f, Quaterniond d, double toleranceBasedOn, string additionalInfo){
+			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
 			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
 			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
 			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
