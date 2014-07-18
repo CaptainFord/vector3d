@@ -7,10 +7,13 @@ using System.Runtime.CompilerServices;
 namespace UnityEngine {
     public struct Vector3d {
 		public const float kEpsilon = 1E-05f;
-		public const double degreesPerRadian = 57.2957795130823;
+		public const double degreesPerRadian = 57.2957795130823d;
+		public const string defaultNumberFormat = "G5";
         public double x;
         public double y;
         public double z;
+
+		public static readonly Vector3d up = new Vector3d(0d,1d,0d);
 
         public double this[int index] {
             get {
@@ -84,11 +87,11 @@ namespace UnityEngine {
             }
         }
 
-        public static Vector3d up {
-            get {
-                return new Vector3d(0d, 1d, 0d);
-            }
-        }
+//        public static Vector3d up {
+//            get {
+//                return new Vector3d(0d, 1d, 0d);
+//            }
+//        }
 
         public static Vector3d down {
             get {
@@ -105,13 +108,6 @@ namespace UnityEngine {
         public static Vector3d right {
             get {
                 return new Vector3d(1d, 0d, 0d);
-            }
-        }
-
-        [Obsolete("Use Vector3d.forward instead.")]
-        public static Vector3d fwd {
-            get {
-                return new Vector3d(0d, 0d, 1d);
             }
         }
 
@@ -311,12 +307,12 @@ namespace UnityEngine {
 			}
         }
 
-        // TODO : fix formatting
         public override string ToString() {
-            return "(" + this.x + ", " + this.y + ", " + this.z + ")";
+			return ToString (defaultNumberFormat);
+//            return "(" + this.x + ", " + this.y + ", " + this.z + ")";
         }
 
-		public override string ToString(String numberFormat) {
+		public string ToString(String numberFormat) {
 			return "(" + this.x.ToString(numberFormat) + ", " 
 				+ this.y.ToString(numberFormat) + ", " 
 				+ this.z.ToString(numberFormat) + ")";

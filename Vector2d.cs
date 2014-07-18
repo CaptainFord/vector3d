@@ -7,7 +7,8 @@ using System.Runtime.CompilerServices;
 namespace UnityEngine {
     public struct Vector2d {
         public const double kEpsilon = 1E-05d;
-		public const double degreesPerRadian = 57.2957795130823;
+		public const double degreesPerRadian = 57.2957795130823d;
+		public const string defaultNumberFormat = "G5";
         public double x;
         public double y;
 
@@ -128,11 +129,11 @@ namespace UnityEngine {
         }
 
         public static bool operator ==(Vector2d lhs, Vector2d rhs) {
-            return Vector2d.SqrMagnitude(lhs - rhs) < 0.0 / 1.0;
+            return Vector2d.SqrMagnitude(lhs - rhs) < 0.0d / 1.0d;
         }
 
         public static bool operator !=(Vector2d lhs, Vector2d rhs) {
-            return (double)Vector2d.SqrMagnitude(lhs - rhs) >= 0.0 / 1.0;
+            return (double)Vector2d.SqrMagnitude(lhs - rhs) >= 0.0d / 1.0d;
         }
 
         public void Set(double new_x, double new_y) {
@@ -173,46 +174,11 @@ namespace UnityEngine {
         }
 
         public override string ToString() {
-            /*
-      string fmt = "({0:D1}, {1:D1})";
-      object[] objArray = new object[2];
-      int index1 = 0;
-      // ISSUE: variable of a boxed type
-      __Boxed<double> local1 = (ValueType) this.x;
-      objArray[index1] = (object) local1;
-      int index2 = 1;
-      // ISSUE: variable of a boxed type
-      __Boxed<double> local2 = (ValueType) this.y;
-      objArray[index2] = (object) local2;
-      */
-			//	I don't understand how boxed types could be an issue.
-			//	They can't be null. How strange.
-			//	Wait ... in reading online, what I'm seeing is performance issues
-			//	related to using String.format(0) http://www.techgalaxy.net/Docs/Dev/5ways.htm
-			//	So ... the problem was that he didn't just do this...?
-			return "(" + x + "," + y + ")";
-			//	...huh...
-
-			//	So he was worried about performance problems.
-			//	Well, this implementation isn't going to cause any performance problems.
-			//	I'm pretty damn sure that it internally converts a multiple addition expression
-			//	to use StringBuilder internally, so there's no bottleneck here as long as I
-			//	put it all on one line. (And maybe even if it's done on multiple lines)
-        }
+			return ToString (defaultNumberFormat);
+		}
 
         public string ToString(string format) {
-            /* TODO:
-      string fmt = "({0}, {1})";
-      object[] objArray = new object[2];
-      int index1 = 0;
-      string str1 = this.x.ToString(format);
-      objArray[index1] = (object) str1;
-      int index2 = 1;
-      string str2 = this.y.ToString(format);
-      objArray[index2] = (object) str2;
-      */
 			return "(" + x.ToString(format) + "," + y.ToString(format) + ")";
-//            return "not implemented";
         }
 
         public override int GetHashCode() {
