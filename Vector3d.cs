@@ -294,9 +294,9 @@ namespace UnityEngine {
 		}
 
 		public static bool ApproximatelyFixed(Vector3d lhs, Vector3d rhs, double toleranceBase){
-			return Mathd.ApproximatelyRelative(lhs.x, rhs.x, toleranceBase) 
-				&& Mathd.ApproximatelyRelative(lhs.y, rhs.y, toleranceBase)
-					&& Mathd.ApproximatelyRelative(lhs.z, rhs.z, toleranceBase);
+			return Mathd.ApproximatelyFixed(lhs.x, rhs.x, toleranceBase) 
+					&& Mathd.ApproximatelyFixed(lhs.y, rhs.y, toleranceBase)
+					&& Mathd.ApproximatelyFixed(lhs.z, rhs.z, toleranceBase);
 		}
 
         public override int GetHashCode() {

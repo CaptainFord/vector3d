@@ -589,5 +589,24 @@ namespace UnityEngine {
 		public Quaternion ToFloatQuaternion(){
 			return new Quaternion((float)x,(float)y,(float)z,(float)w);
 		}
+
+		/**
+		 *	Tests if the values of the vector are approximately equal. The value of precisionBase is a multiple of the
+		 *	base precision of a double, which is itself multiplied by the values to determine the tolerance. Any value
+		 *	less than zero means "must be exactly zero".
+		 */
+		public static bool Approximately(Quaterniond lhs, Quaterniond rhs, double toleranceMultiplier){
+			return Mathd.ApproximatelyRelative(lhs.x, rhs.x, toleranceMultiplier) 
+				&& Mathd.ApproximatelyRelative(lhs.y, rhs.y, toleranceMultiplier)
+					&& Mathd.ApproximatelyRelative(lhs.z, rhs.z, toleranceMultiplier)
+			&& Mathd.ApproximatelyRelative(lhs.w, rhs.w, toleranceMultiplier);
+		}
+		
+		public static bool ApproximatelyFixed(Quaterniond lhs, Quaterniond rhs, double toleranceBase){
+			return Mathd.ApproximatelyFixed(lhs.x, rhs.x, toleranceBase) 
+					&& Mathd.ApproximatelyFixed(lhs.y, rhs.y, toleranceBase)
+					&& Mathd.ApproximatelyFixed(lhs.z, rhs.z, toleranceBase)
+					&& Mathd.ApproximatelyFixed(lhs.w, rhs.w, toleranceBase);
+		}
 	}
 }
