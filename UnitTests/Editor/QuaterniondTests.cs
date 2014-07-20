@@ -6,6 +6,7 @@ using System.Text;
 
 namespace UnityTest {
 
+
 	[TestFixture]
 	[Category ("Sample Tests")]
 	public class QuaterniondTests
@@ -18,11 +19,11 @@ namespace UnityTest {
 //		const double defaultToleranceFactor = 1.19209289550781E-07;
 
 		const int numberOfTestItems = 12;
-		const int expandedNumberOfTestItems = 513;
+		const int expandedNumberOfTestItems = 256;
 
 		TestItemSet[] testItemSets;
-		Dictionary<string,int[]> combos = new Dictionary<string, int[]>();
-		List<int> list = new List<int>();
+		IDictionary<string,ComboInfo> combos = new SortedList<string, ComboInfo>();
+//		List<int> list = new List<int>();
 
 		public struct TestItemSet {
 			public Quaternion fq0, fq1;
@@ -147,7 +148,7 @@ namespace UnityTest {
 		[Test(Description = "SetFromToRotation")]
 		[Category ("SetFromToRotation")]
 		public void TestSetFromToRotation (
-			[NUnit.Framework.Range (0,expandedNumberOfTestItems-1)] int testIndex
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
 				){
 			TestItemSet set = testItemSets[testIndex];
 
@@ -157,89 +158,28 @@ namespace UnityTest {
 			q.SetFromToRotation(set.fv0, set.fv1);
 			qd.SetFromToRotation(set.dv0, set.dv1);
 
-			if(testIndex == 370){
-				Debug.Log (q +", " + qd);
-			}
+//			Quaterniond qdneg = Negative(qd);
+//			if(GetSumOfSquares(Subtract(q, qd)) < GetSumOfSquares(Subtract(q, qdneg))){
+//				AssertSimilar(q, qd, 2d);
+//			} else {
+//				AssertSimilar(q, qdneg, 2d);
+			//			}
+			AssertSimilar(q, qd, 2d);
 
-			if(testIndex == expandedNumberOfTestItems - 1){
-				DisplayCombos();
-			}
+			AssertSimilar(set.fv1.normalized, (q * set.fv0).normalized, 4d);
+			AssertSimilar(set.dv1.normalized, (qd * set.dv0).normalized, 4d);
+		}
 
-			AddOne(q, qd, testIndex, false);
-			AssertSimilar(q, qd, 2d, "vectors: " + set.fv0 + ", " + set.fv1);
-			AddOne(q, qd, testIndex, true);
+		Quaterniond Negative(Quaterniond q){
+			return new Quaterniond(-q.x, -q.y, -q.z, -q.w);
+		}
+		Quaterniond Subtract(Quaternion a, Quaterniond b){
+			return new Quaterniond(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w);
+		}
+		Quaterniond Subtract(Quaterniond a, Quaterniond b){
+			return new Quaterniond(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w);
+		}
 
-//			AssertSimilar(set.fv1.normalized, (q * set.fv0).normalized, 4d);
-//			AssertSimilar(set.dv1.normalized, (qd * set.dv0).normalized, 4d);
-		}
-		void DisplayCombos(){
-			StringBuilder builder = new StringBuilder();
-			foreach(string key in combos.Keys){
-				int[] nums = combos[key];
-				builder.Append(key + ": " + nums[0] + "/" + nums[1] + "\n");
-			}
-			Debug.Log (builder.ToString());
-
-		}
-		void AddOne(TestItemSet set, bool passed){
-			string key = "";
-			for(int i=0; i<3; ++i){
-				if(set.fv0[i] < 0){
-					key += "-";
-				} else {
-					key += "+";
-				}
-			}
-			for(int i=0; i<3; ++i){
-				if(set.fv1[i] < 0){
-					key += "-";
-				} else {
-					key += "+";
-				}
-			}
-			if(!combos.ContainsKey(key)){
-				combos.Add (key, new int[2]);
-			}
-			int[] nums = combos[key];
-			if(passed){
-				++nums[0];
-			} else {
-				++nums[1];
-			}
-		}
-		void AddOne(Quaternion q, Quaterniond qd, int testIndex, bool passed){
-			string key = "";
-			for(int i=0; i<4; ++i){
-				if(q[i] < 0){
-					key += "-";
-				} else {
-					key += "+";
-				}
-			}
-//			for(int i=0; i<4; ++i){
-//				if(qd[i] < 0){
-//					key += "-";
-//				} else {
-//					key += "+";
-//				}
-//			}
-			if(!combos.ContainsKey(key)){
-				combos.Add (key, new int[2]);
-			}
-			int[] nums = combos[key];
-			if(passed){
-				++nums[0];
-			} else {
-				++nums[1];
-			}
-			if(key.Equals("+-++")){
-				if(passed){
-					list.Remove(testIndex);
-				} else {
-					list.Add (testIndex);
-				}
-			}
-		}
 
 		[Test(Description = "SetLookRotation")]
 		[Category ("SetLookRotation")]
@@ -250,11 +190,39 @@ namespace UnityTest {
 			
 			Quaternion q = new Quaternion();
 			Quaterniond qd = new Quaterniond();
+//
+//			Quaternion q2 = new Quaternion();
+//			Quaterniond qd2 = new Quaterniond();
+
+//			q2.SetFromToRotation(Vector3.forward, set.fv0);
+//			qd2.SetFromToRotation(Vector3d.forward, set.dv0);
 			
 			q.SetLookRotation(set.fv0);
 			qd.SetLookRotation(set.dv0);
+
+//			Debug.Log ("q=" + q.ToString("G5") + " q2=" + q2.ToString("G5") + " qd=" + qd.ToString("G5") + " qd2=" + qd2.ToString("G5") +
+//			           "\nq=" + Quaternion.Angle(Quaternion.identity, q) + " q2=" + Quaternion.Angle(Quaternion.identity, q2) 
+//			           + " qd=" + Quaterniond.Angle(Quaterniond.identity, qd) + " qd2=" + Quaterniond.Angle(Quaterniond.identity, qd2));
+//			Vector3[] vectors = new Vector3[8];
+//			for(int i=0; i<8; ++i){
+//				vectors[i] = new Vector3(
+//					i % 2 == 0 ? -1f : 1f,
+//					(i / 2) % 2 == 0 ? -1f : 1f,
+//					(i / 4) == 0 ? -1f : 1f
+//					);
+//			}
+//			StringBuilder msg = new StringBuilder();
+//			foreach(Vector3 coords in vectors){
+//				msg.Append(coords).Append(" -> ").Append((q * coords).ToString("G5")).Append(" => ").Append((qd * new Vector3d(coords)).ToString("G5")).AppendLine();
+//			}
+//			Debug.Log (msg);
+
+			AssertSimilar (set.fv0.normalized, q * Vector3.forward, 1.5d);
+			AssertSimilar (set.dv0.normalized, qd * Vector3d.forward, 1.5d);
 			
-			AssertSimilar(q, qd);
+			AssertSimilar(q, qd, "vector: " + set.fv0);
+
+
 		}
 
 		[Test(Description = "SetLookRotation")]
@@ -268,10 +236,26 @@ namespace UnityTest {
 			
 			q.SetLookRotation(set.fv0, set.fv1);
 			qd.SetLookRotation(set.dv0, set.dv1);
-			
-			AssertSimilar(q, qd);
-		}
 
+						Vector3[] vectors = new Vector3[8];
+						for(int i=0; i<8; ++i){
+							vectors[i] = new Vector3(
+								i % 2 == 0 ? -1f : 1f,
+								(i / 2) % 2 == 0 ? -1f : 1f,
+								(i / 4) == 0 ? -1f : 1f
+								);
+						}
+						StringBuilder msg = new StringBuilder();
+						foreach(Vector3 coords in vectors){
+							msg.Append(coords).Append(" -> ").Append((q * coords).ToString("G5")).Append(" => ").Append((qd * new Vector3d(coords)).ToString("G5")).AppendLine();
+						}
+						Debug.Log (msg);
+
+			AssertSimilar (set.fv0.normalized, q * Vector3.forward, 2.5d);
+			AssertSimilar (set.dv0.normalized, qd * Vector3d.forward, 2.5d);
+			
+			AssertSimilar(q, qd, "vectors: " + set.fv0 + ", " + set.fv1);
+		}
 
 		[Test(Description = "ToAngleAxis")]
 		[Category ("ToAngleAxis")]
@@ -344,7 +328,7 @@ namespace UnityTest {
 			Quaternion fLerp = Quaternion.Lerp(set.fq0, set.fq1, set.f0);
 			Quaterniond dLerp = Quaterniond.Lerp(set.dq0, set.dq1, set.d0);
 			
-			AssertSimilar(fLerp, dLerp);
+			AssertSimilar(fLerp, dLerp, "q0=" + set.dq0 + " q1=" + set.dq1 + " t=" + set.f0);
 		}
 		
 		[Test(Description = "Static:LookRotation(v3)")]
@@ -380,10 +364,24 @@ namespace UnityTest {
 			){
 			TestItemSet set = testItemSets[testIndex];
 			
-			Quaternion fResult = Quaternion.RotateTowards(set.fq0, set.fq1, set.f0);
-			Quaterniond dResult = Quaterniond.RotateTowards(set.dq0, set.dq1, set.d0);
-			
-			AssertSimilar(fResult, dResult);
+			RotateTowardsTestPair(set, 360f);
+			RotateTowardsTestPair(set, 90f);
+			RotateTowardsTestPair(set, 30f);
+			RotateTowardsTestPair(set, 15f);
+			RotateTowardsTestPair(set, 4f);
+			RotateTowardsTestPair(set, 0);
+
+		}
+
+		void RotateTowardsTestPair(TestItemSet set, float maxAngleMult){
+			//	Once with the raw angle, and once with it multiplied by the input floats (might as well do both)
+			RotateTowardsTest(set, maxAngleMult);
+			RotateTowardsTest(set, maxAngleMult * set.f0);
+		}
+		void RotateTowardsTest(TestItemSet set, float angle){
+			Quaternion fResult = Quaternion.RotateTowards(set.fq0, set.fq1, angle);
+			Quaterniond dResult = Quaterniond.RotateTowards(set.dq0, set.dq1, angle);
+			AssertSimilar(fResult, dResult, 1.5d);
 		}
 
 		[Test(Description = "Static:Slerp")]
@@ -396,7 +394,7 @@ namespace UnityTest {
 			Quaternion fSlerp = Quaternion.Slerp(set.fq0, set.fq1, set.f0);
 			Quaterniond dSlerp = Quaterniond.Slerp(set.dq0, set.dq1, set.d0);
 			
-			AssertSimilar(fSlerp, dSlerp);
+			AssertSimilar(fSlerp, dSlerp, "q0=" + set.dq0 + " q1=" + set.dq1 + " t=" + set.f0);
 		}
 
 		[Test(Description = "Identity")]
@@ -635,31 +633,37 @@ namespace UnityTest {
 		}
 
 		void AssertSimilar(Vector3 f, Vector3 d, double toleranceBasedOn, string additionalInfo){
-			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+			AssertSimilar(new Vector3d(f), new Vector3d(d), toleranceBasedOn, additionalInfo);
 		}
 		void AssertSimilar(Quaternion f, Quaternion d, double toleranceBasedOn, string additionalInfo){
-			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
+//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+//			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
+			AssertSimilar(new Quaterniond(f), new Quaterniond(d), toleranceBasedOn, additionalInfo);
 		}
 
 		void AssertSimilar(Vector3 f, Vector3d d, double toleranceBasedOn, string additionalInfo){
-			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+			AssertSimilar(new Vector3d(f), d, toleranceBasedOn, additionalInfo);
 		}
 		void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn, string additionalInfo){
-			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
+//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
+//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
+//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
+//			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
+//			AddCombo(f, d, false);
+			AssertSimilar(new Quaterniond(f), d, toleranceBasedOn, additionalInfo);
+//			AddCombo(f, d, true);
 		}
 
 		void AssertSimilar(Vector3d f, Vector3d d, double toleranceBasedOn, string additionalInfo){
@@ -670,11 +674,275 @@ namespace UnityTest {
 		}
 		void AssertSimilar(Quaterniond f, Quaterniond d, double toleranceBasedOn, string additionalInfo){
 			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
+			Quaterniond dneg = Negative(d);
+			if(GetSumOfSquares(Subtract(f, d)) > GetSumOfSquares(Subtract(f, dneg))){
+				d = dneg;
+			}
 			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
 			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
 			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
 			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
 		}
+
+		int numComboEntries = 0;
+		int numMatchingPattern = 0;
+		List<string> patternExceptions = new List<string>();
+
+		void AddCombo(Quaternion f, Quaterniond d, bool passed){
+			string mainKey = ComboKeyOf(d);
+			string otherKey = ComboKeyOf(f);
+			mainKey += GetNameOfHighestMagnitudeCoordinate(d);
+			otherKey += GetNameOfHighestMagnitudeCoordinate(d);
+			ComboInfo info = GetOrCreateComboInfo(mainKey);
+			if(passed){
+				++info.passed;
+			} else {
+				++info.count;
+				if(mainKey.Equals(otherKey)){
+					++info.matchesSignsOfDouble;
+//					info.matchingValues.Add(d);
+				} else {
+//					info.mismatchingValues.Add(d);
+				}
+
+				++numComboEntries;
+				if(MatchesTestPattern(f)){
+					++numMatchingPattern;
+				} else {
+//					patternExceptions.Add (f.ToString("G5"));
+					if(MatchesSecondaryTestPattern(f)){
+						patternExceptions.Add ((f.x / f.w).ToString());
+					} else {
+						patternExceptions.Add (f.ToString("G5"));
+					}
+				}
+			}
+		}
+
+		string GetNameOfHighestMagnitudeCoordinate(Quaterniond q){
+			int maxIndex = 0;
+			double maxValue = Mathd.Abs(q[0]);
+			for(int i=1; i<4; ++i){
+				double value = Mathd.Abs(q[i]);
+				if(value > maxValue){
+					maxIndex = i;
+					maxValue = value;
+				}
+			}
+			return "xyzw".Substring(maxIndex, 1);
+		}
+
+		bool MatchesSecondaryTestPattern(Quaternion f){
+			if(f.x >= 0f || f.w < 0f){
+				return false;
+			}
+//			float x = Mathf.Abs(f.x);
+//			float y = Mathf.Abs(f.y);
+//			float z = Mathf.Abs(f.z);
+//			float w = Mathf.Abs(f.w);
+			return false;
+		}
+
+		bool MatchesTestPattern(Quaternion f){
+			//	My suspicion is that unity's quaternions always have the element with the highest magnitude as positive
+			bool highestIsPositive = f[0] >= 0f;
+			bool highestIsAmbiguous = false;
+			float maxValue = Mathf.Abs(f[0]);
+			for(int i=1; i<4; ++i){
+				float value = Mathf.Abs(f[i]);
+				bool isPositive = value >= 0f;
+				if(value > maxValue){
+					maxValue = value;
+					highestIsPositive = isPositive;
+					highestIsAmbiguous = false;
+				} else if(value == maxValue){
+					if(isPositive != highestIsPositive){
+						highestIsAmbiguous = true;
+					}
+				}
+			}
+			if(highestIsAmbiguous){
+				Debug.LogWarning("Tie for max value's sign: " + f.ToString("G9"));
+				return true;
+			}
+			return highestIsPositive;
+		}
+
+		public class ComboInfo {
+			public string key;
+			public int passed;
+			public int count;
+			public int matchesSignsOfDouble;
+
+			public List<Quaternion> matchingValues = new List<Quaternion>();
+			public List<Quaternion> mismatchingValues = new List<Quaternion>();
+
+			public override string ToString ()
+			{
+				return key + "(" + passed + "," + matchesSignsOfDouble + "/" + count + ")";
+			}
+		}
+
+		ComboInfo GetOrCreateComboInfo(string key){
+			if(!combos.ContainsKey(key)){
+				ComboInfo info = new ComboInfo();
+				info.key = key;
+				combos.Add (key, info);
+			}
+			return combos[key];
+		}
+
+		string ComboKeyOf(Quaternion q){
+			StringBuilder b = new StringBuilder();
+			for(int i=0; i<4; ++i){
+				b.Append (q[i] < 0f ? "-" : (q[i] == 0f ? "0" : "+"));
+			}
+			return b.ToString();
+		}
+		string ComboKeyOf(Quaterniond q){
+			StringBuilder b = new StringBuilder();
+			for(int i=0; i<4; ++i){
+				b.Append (q[i] < 0d ? "-" : (q[i] == 0d ? "0" : "+"));
+			}
+			return b.ToString();
+		}
+
+		[TestFixtureTearDown]
+		public void LogComboInfo(){
+			if(combos.Count > 0){
+				string message = BuildComboInfoMessage();
+				Debug.Log (message);
+			}
+		}
+//		[TearDown]
+//		public static void LogComboInfo(QuaterniondTests tests){
+//			string message = tests.BuildComboInfoMessage();
+//			Debug.Log (message);
+//		}
+
+		string BuildComboInfoMessage(){
+			StringBuilder msg = new StringBuilder();
+			IList<ComboInfo> allPassed = new List<ComboInfo>();
+			IList<ComboInfo> somePassed = new List<ComboInfo>();
+			IList<ComboInfo> nonePassed = new List<ComboInfo>();
+
+//			msg.Append("Pattern Matches: " + numMatchingPattern + "/" + numComboEntries);
+//			AppendItems(msg, patternExceptions);
+//			msg.AppendLine();
+
+			foreach(string key in combos.Keys){
+				ComboInfo info = combos[key];
+				if(info.passed == info.count){
+					allPassed.Add (info);
+				} else if(info.passed == 0){
+					nonePassed.Add(info);
+				} else {
+					if(info.passed < 0 || info.passed > info.count){
+						Debug.LogError("Combo Info has a bizarre number of passes: " + info);
+					}
+					somePassed.Add(info);
+				}
+			}
+			msg.Append("100% Passed[" + allPassed.Count + "]: (");
+			appendItemNames(msg, allPassed);
+			msg.Append(") ");
+
+			msg.Append("100% Failed[" + nonePassed.Count + "]: (");
+			appendItemNames(msg, nonePassed);
+			msg.Append(") ");
+
+			msg.Append("Others[" + somePassed.Count + "]: (");
+			appendItemNames(msg, somePassed);
+			msg.Append(")");
+			foreach(ComboInfo info in combos.Values){
+				msg.AppendLine();
+				msg.Append(info.key).Append(" ").Append(info.passed).Append("/").Append(info.count)
+						.Append(" ").Append(info.matchesSignsOfDouble).Append("/").Append(info.count);
+//				msg.Append("  ");
+//				AppendInfoValues(msg, info);
+			}
+
+			return msg.ToString();
+		}
+
+		void AppendInfoValues(StringBuilder msg, ComboInfo info){
+			msg.AppendLine().Append("\tMatches[").Append(info.matchingValues.Count).Append("]: ");
+			if(info.matchingValues.Count > 0){
+				foreach(Quaternion q in info.matchingValues){
+					msg.Append(q.ToString("G3")).Append(", ");
+				}
+				msg.Remove(msg.Length - 2, 2);
+			}
+			msg.AppendLine().Append("\tMismatches[").Append(info.mismatchingValues.Count).Append("]: ");
+			if(info.matchingValues.Count > 0){
+				foreach(Quaternion q in info.mismatchingValues){
+					msg.Append(q.ToString("G3")).Append(", ");
+				}
+				msg.Remove(msg.Length - 2, 2);
+			}
+		}
+
+		void appendItemNames(StringBuilder builder, ICollection<ComboInfo> items){
+			if(items.Count < 1){
+				return;
+			}
+			const string separator = ", ";
+			foreach(ComboInfo item in items){
+				builder.Append(item.key).Append(separator);
+			}
+			builder.Remove(builder.Length - separator.Length, separator.Length);
+		}
+
+		void AppendItems(StringBuilder builder, ICollection<Quaternion> items){
+			if(items.Count < 1){
+				return;
+			}
+			const string separator = ", ";
+			foreach(Quaternion item in items){
+				builder.Append(item.ToString("G5")).Append(separator);
+			}
+			builder.Remove(builder.Length - separator.Length, separator.Length);
+		}
+
+		void AppendItems<T>(StringBuilder builder, ICollection<T> items){
+			if(items.Count < 1){
+				return;
+			}
+			const string separator = ", ";
+			foreach(T item in items){
+				builder.Append(item).Append(separator);
+			}
+			builder.Remove(builder.Length - separator.Length, separator.Length);
+		}
+
+		/*
+		 * Results from TestSetFromToRotation with 1024 tests using the seed "large traffic cones".GetHashCode()
+		 * 100% Passed[8]: (---+, +--+, -+-+, --++, ++-+, +-++, -+++, ++++) 100% Failed[7]: (--+-, -+--, +---, +-+-, -++-, ++--, +++-) Others[0]: ()
+			---+ 87/87 87/87
+			--+- 0/11 0/11
+			-+-- 0/8 0/8
+			+--- 0/8 0/8
+			+--+ 105/105 105/105
+			-+-+ 119/119 119/119
+			--++ 109/109 109/109
+			+-+- 0/18 0/18
+			-++- 0/21 0/21
+			++-- 0/19 0/19
+			++-+ 113/113 113/113
+			+-++ 117/117 117/117
+			-+++ 128/128 128/128
+			+++- 0/36 0/36
+			++++ 125/125 125/125
+
+			//	I was RIGHT! It always keeps the real portion positive. It makes comparison so much easier.
+			//	That needs to be in the Normalize method, and I also need a new method called NormalizeSign()
+
+			//	Oh wait, no, it's the opposite. Mine always had a positive real value. Unity's version occasionally doesn't.
+			//	...crap. Why? Is there anything meaningful about it? Or is it the result of some optimization I'm unaware of?
+
+				In attempting to identify a pattern, I've concluded that there really isn't anything dependable.
+				I just need to know the algorithm. And I don't think it ultimately matters.
+		*/
 	}
 }
 

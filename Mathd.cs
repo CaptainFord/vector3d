@@ -12,6 +12,8 @@ namespace UnityEngine {
         public const double Deg2Rad = 0.01745329d;
         public const double Rad2Deg = 57.29578d;
         public const double Epsilon = 1.401298E-45d;
+		public const double DoublePrecision = 2.22044604925031E-16d;	//	Minimum relative value. Anything smaller than this gets rounded off. In most cases, it might be useful to double this.
+		public const double DoublePrecisionMultiplier = 4503599627370500d;
 
         public static double Sin(double d) {
             return Math.Sin(d);
@@ -253,6 +255,28 @@ namespace UnityEngine {
         public static bool Approximately(double a, double b) {
             return Mathd.Abs(b - a) < Mathd.Max(1E-06d * Mathd.Max(Mathd.Abs(a), Mathd.Abs(b)), 1.121039E-44d);
         }
+		/**
+		 * In this version, the tolerance is based on a fixed precision. 
+		 * For example, the values may be specified in units of degrees, or millimeters, etc.
+		 * Use this version when you know how precise you want to be.
+		 */
+		public static bool ApproximatelyFixed(double a, double b, double baseValue) {
+			double tolerance = baseValue * DoublePrecision;
+			double difference = Mathd.Abs(a - b);
+			return difference <= tolerance;
+		}
+		/**
+		 * In this version, the tolerance is based on the values themselves.
+		 * This version is used when the caller is blind with regards to the meaning of the values
+		 * and the degree of necessary precision. The toleranceMultiplier is more or less how many
+		 * "steps" the values are allowed to be apart. toleranceMultipliers less than 1 translate essentially
+		 * to "must be exactly equal", and values less than 1 will always fail.
+		 */
+		public static bool ApproximatelyRelative(double a, double b, double toleranceMultiplier) {
+			double tolerance = toleranceMultiplier * DoublePrecision * Mathd.Max(Mathd.Abs(a), Mathd.Abs(b));
+			double difference = Mathd.Abs(a - b);
+			return difference <= tolerance;
+		}
 
         public static double SmoothDamp(double current, double target, ref double currentVelocity, double smoothTime, double maxSpeed) {
             double deltaTime = (double)Time.deltaTime;

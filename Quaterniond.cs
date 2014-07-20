@@ -10,25 +10,64 @@ namespace UnityEngine {
 		public static void scratchGrounds(){
 //			Quaternion q = new Quaternion();
 //			UnityTest.QuaterniondTests tests = UnityTest.QuaterniondTests();
-			System.Random rand = new System.Random("Nothing at all".GetHashCode());
-			Quaterniond qd0 = RandomQuat(rand);
-			Quaterniond qd1 = RandomQuat(rand);
+//			System.Random rand = new System.Random("Nothing at all".GetHashCode());
+//			Quaterniond qd0 = RandomQuat(rand);
+//			Quaterniond qd1 = RandomQuat(rand);
 
-			//	Okay, here we go
-			Debug.Log ("quats: " + qd0 + " " + qd1);
-			for(int i=0; i<4; ++i){
-				bool aFirst = i > 1;
-				bool inverseA = i % 2 == 0;
-				QuaternionDiffTest(qd0, qd1, aFirst, inverseA);
-			}
+//			Debug.Log ("quats: " + qd0 + " " + qd1);
+//			for(int i=0; i<4; ++i){
+//				bool aFirst = i > 1;
+//				bool inverseA = i % 2 == 0;
+//				QuaternionDiffTest(qd0, qd1, aFirst, inverseA);
+//			}
+//
+//			for(int i=0; i<4; ++i){
+//				bool aFirst = i > 1;
+//				bool checkFirst = i % 2 == 0;
+//				QuaternionDiffTest2(qd0, qd1, aFirst, checkFirst);
+//			}
 
-			for(int i=0; i<4; ++i){
-				bool aFirst = i > 1;
-				bool checkFirst = i % 2 == 0;
-				QuaternionDiffTest2(qd0, qd1, aFirst, checkFirst);
-			}
+//			Debug.Log (Convert.ToString(BitConverter.DoubleToInt64Bits(0.0),2) + "\n" 
+//			           + Convert.ToString(BitConverter.DoubleToInt64Bits(0.0 / 1.0),2));
+//			Vector3dEqualsInvestigation();
+//			QuaternionEqualsInvestigation();
+		}
+		static void Vector3dEqualsInvestigation(){
+			TestVector3Equals(0,0,0);
+			TestVector3Equals(1,1,1);
 
 		}
+		static void TestVector3Equals(double x, double y, double z){
+			Vector3d dv0 = new Vector3d(x,y,z);
+			Vector3d dv1 = new Vector3d(x,y,z);
+			Vector3 fv0 = (Vector3)dv0;
+			Vector3 fv1 = (Vector3)dv1;
+
+			Debug.Log (EqualsMessage(dv0, dv1) + "\n" + EqualsMessage(fv0, fv1));
+
+
+		}
+		static string EqualsMessage(Vector3d a, Vector3d b){
+			return (a == b) + " = (" + a + " == " + b + ") = " + (a.Equals(b));
+		}
+		static string EqualsMessage(Vector3 a, Vector3 b){
+			return (a == b) + " = (" + a + " == " + b + ") = " + (a.Equals(b));
+		}
+		static void LogEquals(Vector3 a, Vector3 b){
+			Debug.Log ((a == b) + " = (" + a + " == " + b + ")");
+		}
+		static void LogEquals(object a, object b){
+			Debug.Log ((a == b) + " = (" + a + " == " + b + ")");
+		}
+		
+		static void QuaternionEqualsInvestigation(){
+//			QuaternionEqualsInvestigation(1f, 1f, 1f, 1f);
+//			Quaternion minEquivalent;
+//			Quaternion maxEquivalent;
+
+
+		}
+
 		public static void QuaternionDiffTest2(Quaterniond a, Quaterniond b, bool aFirst, bool checkFirst){
 			Quaterniond stepOne = aFirst ? a.inverse * b : b * a.inverse;
 			string labelOne = aFirst ? "(!a*b)" : "(b*!a)";
@@ -150,17 +189,63 @@ namespace UnityEngine {
 					this.w.ToString(numberFormat) + ")";
 		}
 
-		public bool Equals(Quaternion floatQuaternion){
-			return this.x == floatQuaternion.x 
-					&& this.y == floatQuaternion.y 
-					&& this.z == floatQuaternion.z 
-					&& this.w == floatQuaternion.w;
+		public override bool Equals(object obj){
+			if(!(obj is Quaterniond)){
+				return false;
+			}
+			Quaterniond other = (Quaterniond)obj;
+			return this.x.Equals(other.x)
+					&& this.y.Equals(other.y)
+					&& this.z.Equals(other.z)
+					&& this.w.Equals(other.w);
+		}
+
+		public override int GetHashCode(){
+			return this.x.GetHashCode() 
+					^ this.y.GetHashCode() << 2 
+					^ this.z.GetHashCode() << 4 
+					^ this.w.GetHashCode() >> 2;
+		}
+
+		public bool EqualTo(Quaternion floatQuaternion){
+			return this.x.Equals(floatQuaternion.x)
+					&& this.y.Equals(floatQuaternion.y)
+	                && this.z.Equals(floatQuaternion.z)
+	                && this.w.Equals(floatQuaternion.w);
 		}
 
 		public Vector3d eulerAngles {
 			get {
-				//	TODO Implement Quaterniond methods
-				throw new UnityException("Not Yet Implemented");
+//				heading = atan2(2*qy*qw-2*qx*qz , 1 - 2*qy2 - 2*qz2)
+//					attitude = asin(2*qx*qy + 2*qz*qw)
+//						bank = atan2(2*qx*qw-2*qy*qz , 1 - 2*qx2 - 2*qz2)
+//						
+//						except when qx*qy + qz*qw = 0.5 (north pole)
+//						which gives:
+//						heading = 2 * atan2(x,w)
+//						bank = 0
+//						and when qx*qy + qz*qw = -0.5 (south pole)
+//						which gives:
+//						heading = -2 * atan2(x,w)
+//						bank = 0
+				double heading, attitude, bank;
+				attitude = Mathd.Asin (2*x*y + 2*z*w);
+				double poleCheck = x * y + z * w;
+				if(poleCheck == 0.5d){ 
+					//	"North Pole"
+					bank = 0;
+					heading = 2 * Mathd.Atan2 (x, w);
+				} else if(poleCheck == -0.5d){ 
+					//	"South Pole"
+					bank = 0;
+					heading = -2 * Mathd.Atan2 (x, w);
+				} else {
+					heading = Mathd.Atan2 (2*y*w - 2*x*z, 1 - 2*y*y - 2*z*z);
+					bank = Mathd.Atan2(2*x*w - 2*y*z,1 - 2*x*x - 2*z*z);
+				}
+				return new Vector3d(heading * Mathd.Rad2Deg, 
+				                    attitude * Mathd.Rad2Deg, 
+				                    bank * Mathd.Rad2Deg);
 			}
 		}
 
@@ -173,20 +258,39 @@ namespace UnityEngine {
 		}
 
 		public void SetLookRotation(Vector3d direction){
-			SetLookRotation (direction, Vector3d.up);
+			//	Okay, what we actually have going on here is two rotations. A heading and a pitch.
+			//	The heading is a rotation around the given up axis. The pitch, then, must be around an axis perpendicular to the up direction and the heading.
+			//	Not perpendicular to the direction vector and up, as I've seen in other algorithms, but perpendicular to the heading and the up axis.
+			Vector3d up = Vector3d.up;
+			Vector3d right = Vector3d.Cross(up, direction);    // The perpendicular vector to Up and Direction
+			Vector3d heading = Vector3d.Cross(right, up);   
+			this = Quaterniond.FromToRotation(heading, direction) * Quaterniond.FromToRotation(Vector3d.forward, heading);
+//			SetLookRotation(direction, Vector3d.up);
 		}
 		public void SetLookRotation(Vector3d direction, Vector3d up){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+			//	Okay, after some experimenting, I'm noticing that this version is rotating twice as far as it should when varying the up vector.
+			//	Such that when the up vector points straight down, it's the same as pointing straight up.
+
+			//	Ultimately, I think the problem stems from the fact that I assumed the camera would start tilted, which it doesn't
+
+			Vector3d right = Vector3d.Cross(up, direction);    // The perpendicular vector to Up and Direction
+			Vector3d heading = Vector3d.Cross(right, up);   
+			this = Quaterniond.FromToRotation(heading, direction) * Quaterniond.FromToRotation(Vector3d.forward, heading);
+
+			//	This correctly orients the camera along the desired axis. Now it just needs to pitch from there to ... well ... that.
+			this = Quaterniond.FromToRotation(Vector3d.up, up);
+
+			this = Quaterniond.FromToRotation(heading, direction) * Quaterniond.FromToRotation(this * Vector3d.forward, heading) * this;
+			// And ... that's a wrap.
 		}
 
 		public void SetFromToRotation(Vector3d from, Vector3d to){
 			from = from.normalized;
 			to = to .normalized;
-			Vector3d cross = Vector3d.Cross(from, to);
-			this.x = cross.x;
-			this.y = cross.y;
-			this.z = cross.z;
+			Vector3d axis = Vector3d.Cross(from, to);
+			this.x = axis.x;
+			this.y = axis.y;
+			this.z = axis.z;
 			this.w = Mathd.Sqrt(from.sqrMagnitude * to.sqrMagnitude) + Vector3d.Dot(from, to);
 			this.Normalize();
 		}
@@ -196,33 +300,11 @@ namespace UnityEngine {
 			this.Normalize();
 
 			double halfAngleInRadians = Mathd.Acos(this.w);
-			double inverseSinAngle = 1.0d / Mathd.Sqrt (1d - this.w * this.w); 	
-//			double inverseSinAngle = 1.0d / Mathd.Sin(halfAngleInRadians);
+			double inverseSinAngle = 1.0d / Mathd.Sqrt (1d - this.w * this.w);
 			angle = halfAngleInRadians * 2.0d * Mathd.Rad2Deg;
 			axis = new Vector3d(this.x * inverseSinAngle, 
 			                    this.y * inverseSinAngle, 
 			                    this.z * inverseSinAngle).normalized;
-
-			//	Huh, these are the same numbers
-//			Debug.Log (Mathd.Sqrt(1d - this.w * this.w) + " / " + Mathd.Sin(halfAngleInRadians));
-
-			//	Note: According the webpage above, singularities occur at w=-1 and w=1, 
-			//	when the angle is 0 or 180 degrees.
-			//	I don't know if this affects the calculation at all.
-			//	I appear to be getting non-normalized vectors
-
-//			double angleWouldBe = Mathd.Deg2Rad * angle * 0.5d;
-//			Vector3d axisWouldBe = axis.normalized;
-//
-//			Quaterniond result = new Quaterniond();
-//			double sinTheta = Mathd.Sin (angleWouldBe);
-//			result.w = Mathd.Cos (angleWouldBe);
-//			result.x = axisWouldBe.x * sinTheta;
-//			result.y = axisWouldBe.y * sinTheta;
-//			result.z = axisWouldBe.z * sinTheta;
-//
-//			Debug.Log ("angle=" + angle + ";axis=" + axis + ";half= " + halfAngleInRadians + "=>" + angleWouldBe + ";" + axisWouldBe
-//			           + "\nquat=" + this + " => " + result + ";sinTheta=" + Mathd.Sin (halfAngleInRadians) + " =>" + sinTheta + ";sanityCheck=" + (inverseSinAngle * sinTheta));
 		}
 
 		public Quaterniond inverse {
@@ -283,8 +365,21 @@ namespace UnityEngine {
 			return result;
 		}
 		public static Quaterniond Lerp(Quaterniond from, Quaterniond to, double t){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+			from = from.normalized;
+			to = to.normalized;
+			double multA = 1 - t;
+			double multB = t;
+
+			if(Quaterniond.Dot(from, to) < 0d){
+				from = -from;
+			}
+			
+			return new Quaterniond(
+				from.x * multA + to.x * multB,
+				from.y * multA + to.y * multB,
+				from.z * multA + to.z * multB,
+				from.w * multA + to.w * multB
+				).normalized;
 		}
 		public static Quaterniond LookRotation(Vector3d forward){
 			return LookRotation (forward, Vector3d.up);
@@ -295,12 +390,43 @@ namespace UnityEngine {
 			return rotation;
 		}
 		public static Quaterniond RotateTowards(Quaterniond from, Quaterniond to, double maxDegreesDelta){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+			double angle = Quaterniond.Angle(from, to);
+			double t = angle > maxDegreesDelta  ? maxDegreesDelta / angle : 1d;
+//			Quaterniond difference = to.inverse * from;
+			return Quaterniond.Slerp(from, to, t);
 		}
 		public static Quaterniond Slerp(Quaterniond from, Quaterniond to, double t){
-			//	TODO Implement Quaterniond methods
-			throw new UnityException("Not Yet Implemented");
+			from = from.normalized;
+			to = to.normalized;
+
+			double dot = Quaterniond.Dot(from, to);
+			if(dot < 0d){
+				from = -from;
+				dot = -dot;
+			}
+			if(dot > 0.9995){
+				return Lerp (from, to, t);
+			}
+//			dot = Mathd.Clamp(dot, -1d, 1d);
+
+			double theta =  Mathd.Acos(dot) * t;
+			;
+			double multA = Mathd.Cos(theta);
+			double multB = Mathd.Sin(theta);
+
+			Quaterniond c = to - from * dot;
+			c.Normalize();
+
+			return new Quaterniond(
+				from.x * multA + c.x * multB,
+				from.y * multA + c.y * multB,
+				from.z * multA + c.z * multB,
+				from.w * multA + c.w * multB
+				).normalized;
+		}
+
+		public static Quaterniond operator -(Quaterniond q){
+			return new Quaterniond(-q.x, -q.y, -q.z, -q.w);
 		}
 
 		public static bool operator !=(Quaterniond lhs, Quaterniond rhs){
@@ -320,6 +446,28 @@ namespace UnityEngine {
 			result.y = lhs.w * rhs.y - lhs.x*rhs.z + lhs.y*rhs.w + lhs.z*rhs.x;
 			result.z = lhs.w * rhs.z + lhs.x*rhs.y - lhs.y*rhs.x + lhs.z*rhs.w;
 			return result;
+		}
+
+		public static Quaterniond operator *(Quaterniond lhs, double rhs){
+			Quaterniond result = new Quaterniond();
+			result.w = lhs.w * rhs;
+			result.x = lhs.x * rhs;
+			result.y = lhs.y * rhs;
+			result.z = lhs.z * rhs;
+			return result;
+		}
+
+		public static Quaterniond operator +(Quaterniond lhs, Quaterniond rhs){
+			return new Quaterniond(lhs.x + rhs.x,
+			                       lhs.y + rhs.y, 
+			                       lhs.z + rhs.z, 
+			                       lhs.w + rhs.w);
+		}	
+		public static Quaterniond operator -(Quaterniond lhs, Quaterniond rhs){
+			return new Quaterniond(lhs.x - rhs.x,
+			                       lhs.y - rhs.y, 
+			                       lhs.z - rhs.z, 
+			                       lhs.w - rhs.w);
 		}
 
 		public static Vector3d operator *(Quaterniond lhs, Vector3d rhs){
@@ -388,15 +536,33 @@ namespace UnityEngine {
 		}
 
 		public void Normalize(){
-			double sum = 0;
-			for (int i = 0; i < 4; ++i){
-				sum += this[i] * this[i];
-			}
+			double sum = this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z;
+//			double magnitudeInverse = Mathd.Sign (this.w) / System.Math.Sqrt(sum);
 			double magnitudeInverse = 1d / System.Math.Sqrt(sum);
-			for (int i = 0; i < 4; ++i){
-				this[i] *= magnitudeInverse;
+			this.w *= magnitudeInverse;
+			this.x *= magnitudeInverse;
+			this.y *= magnitudeInverse;
+			this.z *= magnitudeInverse;
+		}
+//		public void NormalizeOld(){
+//			double sum = 0;
+//			for (int i = 0; i < 4; ++i){
+//				sum += this[i] * this[i];
+//			}
+//			double magnitudeInverse = Mathd.Sign (this.w) / System.Math.Sqrt(sum);
+//			for (int i = 0; i < 4; ++i){
+//				this[i] *= magnitudeInverse;
+//			}
+//		}
+		public void NormalizeSign(){
+			if(this.w < 0d){
+				this.w = -this.w;
+				this.x = -this.x;
+				this.y = -this.y;
+				this.z = -this.z;
 			}
 		}
+
 		public Quaterniond normalized
 		{
 			get {
@@ -420,5 +586,8 @@ namespace UnityEngine {
 			return sum;
 		}
 
+		public Quaternion ToFloatQuaternion(){
+			return new Quaternion((float)x,(float)y,(float)z,(float)w);
+		}
 	}
 }

@@ -160,7 +160,19 @@ namespace UnityEngine {
         }
 
         public static bool operator ==(Vector3d lhs, Vector3d rhs) {
-            return (double)Vector3d.SqrMagnitude(lhs - rhs) < 0.0 / 1.0;
+			//	What's up with the division operation?
+			//	Wait ... less than zero? ... what? I have zero comprehension of this. Shouldn't this always fail? What exactly is this testing?
+			//	Ultimately, isn't this just testing that all components are equal? (Not quite, this would eliminate really tiny fractions)
+			//	Okay, one thing this would do is eliminate really tiny fractions. Except ... no, it wouldn't. I think this is just stupid.
+
+			//	Yes ... this always fails. Even when testing an instance against itself. That should be "duh" test case.
+			//	I'm betting he wrote it this way so he could adjust the precision arbitrarily. Dumb.
+
+			return lhs.x == rhs.x 
+				&& lhs.y == rhs.y 
+				&& lhs.z == rhs.z;
+//			Debug.Log ("'==' of " + lhs + ", " + rhs + " produced: " + Vector3d.SqrMagnitude(lhs - rhs));
+//            return (double)Vector3d.SqrMagnitude(lhs - rhs) < 0.0 / 1.0;
         }
 
         public static bool operator !=(Vector3d lhs, Vector3d rhs) {
@@ -269,6 +281,23 @@ namespace UnityEngine {
         public static Vector3d Cross(Vector3d lhs, Vector3d rhs) {
             return new Vector3d(lhs.y * rhs.z - lhs.z * rhs.y, lhs.z * rhs.x - lhs.x * rhs.z, lhs.x * rhs.y - lhs.y * rhs.x);
         }
+
+		/**
+		 *	Tests if the values of the vector are approximately equal. The value of precisionBase is a multiple of the
+		 *	base precision of a double, which is itself multiplied by the values to determine the tolerance. Any value
+		 *	less than zero means "must be exactly zero".
+		 */
+		public static bool Approximately(Vector3d lhs, Vector3d rhs, double toleranceMultiplier){
+			return Mathd.ApproximatelyRelative(lhs.x, rhs.x, toleranceMultiplier) 
+					&& Mathd.ApproximatelyRelative(lhs.y, rhs.y, toleranceMultiplier)
+					&& Mathd.ApproximatelyRelative(lhs.z, rhs.z, toleranceMultiplier);
+		}
+
+		public static bool ApproximatelyFixed(Vector3d lhs, Vector3d rhs, double toleranceBase){
+			return Mathd.ApproximatelyRelative(lhs.x, rhs.x, toleranceBase) 
+				&& Mathd.ApproximatelyRelative(lhs.y, rhs.y, toleranceBase)
+					&& Mathd.ApproximatelyRelative(lhs.z, rhs.z, toleranceBase);
+		}
 
         public override int GetHashCode() {
             return this.x.GetHashCode() ^ this.y.GetHashCode() << 2 ^ this.z.GetHashCode() >> 2;
