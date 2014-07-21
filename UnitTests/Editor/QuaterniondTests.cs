@@ -266,19 +266,19 @@ namespace UnityTest {
 			q.SetLookRotation(set.fv0, set.fv1);
 			qd.SetLookRotation(set.dv0, set.dv1);
 
-						Vector3[] vectors = new Vector3[8];
-						for(int i=0; i<8; ++i){
-							vectors[i] = new Vector3(
-								i % 2 == 0 ? -1f : 1f,
-								(i / 2) % 2 == 0 ? -1f : 1f,
-								(i / 4) == 0 ? -1f : 1f
-								);
-						}
-						StringBuilder msg = new StringBuilder();
-						foreach(Vector3 coords in vectors){
-							msg.Append(coords).Append(" -> ").Append((q * coords).ToString("G5")).Append(" => ").Append((qd * new Vector3d(coords)).ToString("G5")).AppendLine();
-						}
-						Debug.Log (msg);
+//						Vector3[] vectors = new Vector3[8];
+//						for(int i=0; i<8; ++i){
+//							vectors[i] = new Vector3(
+//								i % 2 == 0 ? -1f : 1f,
+//								(i / 2) % 2 == 0 ? -1f : 1f,
+//								(i / 4) == 0 ? -1f : 1f
+//								);
+//						}
+//						StringBuilder msg = new StringBuilder();
+//						foreach(Vector3 coords in vectors){
+//							msg.Append(coords).Append(" -> ").Append((q * coords).ToString("G5")).Append(" => ").Append((qd * new Vector3d(coords)).ToString("G5")).AppendLine();
+//						}
+//						Debug.Log (msg);
 
 			AssertSimilar (set.fv0.normalized, q * Vector3.forward, 2.5d);
 			AssertSimilar (set.dv0.normalized, qd * Vector3d.forward, 2.5d);

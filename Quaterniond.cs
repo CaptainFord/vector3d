@@ -214,20 +214,34 @@ namespace UnityEngine {
 	                && this.w.Equals(floatQuaternion.w);
 		}
 
+		//	The definition of Quaterniond.Euler is:
+		//	"Returns a rotation that rotates z degrees around the z axis, 
+		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
+		//	So that would mean I would need to reverse that calculation. 
+		//	Perhaps the first thing I should do is simplify/optimize that calculation, so I
+		//	can figure out the easiest way to reverse it.
+
 		public Vector3d eulerAngles {
 			get {
-//				heading = atan2(2*qy*qw-2*qx*qz , 1 - 2*qy2 - 2*qz2)
-//					attitude = asin(2*qx*qy + 2*qz*qw)
-//						bank = atan2(2*qx*qw-2*qy*qz , 1 - 2*qx2 - 2*qz2)
-//						
-//						except when qx*qy + qz*qw = 0.5 (north pole)
-//						which gives:
-//						heading = 2 * atan2(x,w)
-//						bank = 0
-//						and when qx*qy + qz*qw = -0.5 (south pole)
-//						which gives:
-//						heading = -2 * atan2(x,w)
-//						bank = 0
+				//	I learned a lot from optimizing the Euler method
+				return new Vector3d(0d,0d,0d);
+			}
+		}
+
+		public Vector3d eulerAnglesWrong {
+			get {
+				//				heading = atan2(2*qy*qw-2*qx*qz , 1 - 2*qy2 - 2*qz2)
+				//					attitude = asin(2*qx*qy + 2*qz*qw)
+				//						bank = atan2(2*qx*qw-2*qy*qz , 1 - 2*qx2 - 2*qz2)
+				//						
+				//						except when qx*qy + qz*qw = 0.5 (north pole)
+				//						which gives:
+				//						heading = 2 * atan2(x,w)
+				//						bank = 0
+				//						and when qx*qy + qz*qw = -0.5 (south pole)
+				//						which gives:
+				//						heading = -2 * atan2(x,w)
+				//						bank = 0
 				double heading, attitude, bank;
 				attitude = Mathd.Asin (2*x*y + 2*z*w);
 				double poleCheck = x * y + z * w;
@@ -342,10 +356,233 @@ namespace UnityEngine {
 		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public static Quaterniond Euler(double x, double y, double z){
+		public static Quaterniond EulerOld(double x, double y, double z){
 			return Quaterniond.AngleAxis(y, Vector3d.up)
 					* Quaterniond.AngleAxis(x, Vector3d.right) 
 					* Quaterniond.AngleAxis(z, Vector3d.forward);
+		}
+
+//		public static Quaterniond Euler(double x, double y, double z){
+//			Quaterniond result = EulerTest (x,y,z);
+//			Quaterniond aroundY = Quaterniond.AngleAxis(y, Vector3d.up);
+//			Quaterniond aroundX = Quaterniond.AngleAxis(x, Vector3d.right);
+//			Quaterniond aroundZ = Quaterniond.AngleAxis(z, Vector3d.forward);
+//			Quaterniond[] rotations = {aroundX, aroundY, aroundZ};
+//			string[] labels = {"x","y","z"};
+//
+//			Quaterniond bestMatch = new Quaterniond();
+//			double bestMatchMagnitude = double.MaxValue;
+//			string bestMatchName = "";
+//			string allMatches = "";
+//			for(int i=0; i<3; ++i){
+//				//	First one
+//				for(int j=0; j<2; ++j){
+//					int firstIndex = i;
+//					int secondIndex = j >= i ? j + 1 : j;
+//					int thirdIndex = 3 - firstIndex - secondIndex;
+////					Debug.Log (i + "," + j + " => " + firstIndex + ", " + secondIndex + ", " + thirdIndex);
+//
+//					Quaterniond attempt = rotations[firstIndex] * rotations[secondIndex] * rotations[thirdIndex];
+//					double magnitude = (attempt - result).GetSumOfSquares();
+//					string name = labels[firstIndex] + labels[secondIndex] + labels[thirdIndex];
+//					if(magnitude < bestMatchMagnitude){
+//						bestMatch = attempt;
+//						bestMatchMagnitude = magnitude;
+//						bestMatchName = name;
+//					}
+//					allMatches += "\n" + name + " " + magnitude + " " + attempt;
+//				}
+//			}
+//			Debug.Log ("Matching: " + result + "\nBest Match: " + bestMatchName + " " + bestMatch + " " + bestMatchMagnitude + allMatches);
+//			return result;
+//		}
+
+		public static Quaterniond Euler(double xIn, double yIn, double zIn){
+			double mult = Mathd.Deg2Rad * 0.5d;
+			double x = xIn * mult;
+			double y = yIn * mult;
+			double z = zIn * mult;
+			
+			double aroundX_x, aroundX_w;
+			double aroundY_y, aroundY_w;
+			double aroundZ_z, aroundZ_w;
+			
+			{
+				aroundY_w = Mathd.Cos (y);
+				aroundY_y = Mathd.Sin (y);
+			}
+			{
+				aroundX_w = Mathd.Cos (x);
+				aroundX_x = Mathd.Sin (x);
+			}
+			{
+				aroundZ_w = Mathd.Cos (z);
+				aroundZ_z = Mathd.Sin (z);
+			}
+			
+			double xy_x, xy_y, xy_z, xy_w;
+			double xyz_x, xyz_y, xyz_z, xyz_w;
+			
+			{
+				xy_w =  aroundY_w * aroundX_w;
+				xy_x =  aroundY_w * aroundX_x;
+				xy_y =  aroundY_y * aroundX_w;
+				xy_z = -aroundY_y * aroundX_x;
+			}
+			{
+				xyz_w =  xy_w * aroundZ_w - xy_z * aroundZ_z;
+				xyz_x =  xy_x * aroundZ_w + xy_y * aroundZ_z;
+				xyz_y = -xy_x * aroundZ_z + xy_y * aroundZ_w;
+				xyz_z =  xy_w * aroundZ_z + xy_z * aroundZ_w;
+			}
+			return new Quaterniond(xyz_x, xyz_y, xyz_z, xyz_w);
+		}
+
+		public static Quaterniond EulerExpanded(double xIn, double yIn, double zIn){
+			double mult = Mathd.Deg2Rad * 0.5d;
+			double x = xIn * mult;
+			double y = yIn * mult;
+			double z = zIn * mult;
+			
+			double yy, yw;	//	Around y axis
+			double xx, xw;	//	Around x axis
+			double zz, zw;	//	Around z axis
+
+			//	Okay, the fact that each one only has two components makes things much clearer
+			{
+				double sinTheta = Mathd.Sin (y);
+				yw = Mathd.Cos (y);
+				yy = 1 * sinTheta;
+			}
+			{
+				double sinTheta = Mathd.Sin (x);
+				xw = Mathd.Cos (x);
+				xx = 1 * sinTheta;
+			}
+			{
+				double sinTheta = Mathd.Sin (z);
+				zw = Mathd.Cos (z);
+				zz = 1 * sinTheta;
+			}
+			
+			double qxyz_x, qxyz_y, qxyz_z, qxyz_w;
+
+			{
+				qxyz_w =  yw * xw * zw - yy * xx * zz;
+				qxyz_x =  yw * xx * zw + yy * xw * zz;
+				qxyz_y = -yw * xx * zz + yy * xw * zw;
+				qxyz_z =  yw * xw * zz + yy * xx * zw;
+			}
+			return new Quaterniond(qxyz_x, qxyz_y, qxyz_z, qxyz_w);
+
+		}
+
+		public static Quaterniond EulerExpandedStep2(double xIn, double yIn, double zIn){
+			double mult = Mathd.Deg2Rad * 0.5d;
+			double x = xIn * mult;
+			double y = yIn * mult;
+			double z = zIn * mult;
+			
+			double aroundX_x, aroundX_w;
+			double aroundY_y, aroundY_w;
+			double aroundZ_z, aroundZ_w;
+			
+			{
+				double sinTheta = Mathd.Sin (y);
+				aroundY_w = Mathd.Cos (y);
+				aroundY_y = 1 * sinTheta;
+			}
+			{
+				double sinTheta = Mathd.Sin (x);
+				aroundX_w = Mathd.Cos (x);
+				aroundX_x = 1 * sinTheta;
+			}
+			{
+				double sinTheta = Mathd.Sin (z);
+				aroundZ_w = Mathd.Cos (z);
+				aroundZ_z = 1 * sinTheta;
+			}
+			
+			double xy_x, xy_y, xy_z, xy_w;
+			double xyz_x, xyz_y, xyz_z, xyz_w;
+			
+			{
+				xy_w = aroundY_w * aroundX_w;
+				xy_x = aroundY_w * aroundX_x;
+				xy_y = aroundY_y * aroundX_w;
+				xy_z = - aroundY_y * aroundX_x;
+			}
+			{
+				xyz_w = 	xy_w * aroundZ_w - xy_z * aroundZ_z;
+				xyz_x = 	xy_x * aroundZ_w + xy_y * aroundZ_z;
+				xyz_y =    -xy_x * aroundZ_z + xy_y * aroundZ_w;
+				xyz_z = 	xy_w * aroundZ_z + xy_z * aroundZ_w;
+			}
+			{
+				xyz_w = aroundY_w * aroundX_w * aroundZ_w - aroundY_y * aroundX_x * aroundZ_z;
+				xyz_x = aroundY_w * aroundX_x * aroundZ_w + aroundY_y * aroundX_w * aroundZ_z;
+				xyz_y = - aroundY_w * aroundX_x * aroundZ_z + aroundY_y * aroundX_w * aroundZ_w;
+				xyz_z = aroundY_w * aroundX_w * aroundZ_z + aroundY_y * aroundX_x * aroundZ_w;
+			}
+			return new Quaterniond(xyz_x, xyz_y, xyz_z, xyz_w);
+		}
+
+		public static Quaterniond EulerTest(double xIn, double yIn, double zIn){
+			double mult = Mathd.Deg2Rad * 0.5d;
+			double x = xIn * mult;
+			double y = yIn * mult;
+			double z = zIn * mult;
+			
+//			Quaterniond aroundY = new Quaterniond();
+//			Quaterniond aroundX = new Quaterniond();
+//			Quaterniond aroundZ = new Quaterniond();
+			
+			double aroundY_x, aroundY_y, aroundY_z, aroundY_w;
+			double aroundX_x, aroundX_y, aroundX_z, aroundX_w;
+			double aroundZ_x, aroundZ_y, aroundZ_z, aroundZ_w;
+			
+			{
+				double sinTheta = Mathd.Sin (y);
+				aroundY_w = Mathd.Cos (y);
+				aroundY_x = 0 * sinTheta;
+				aroundY_y = 1 * sinTheta;
+				aroundY_z = 0 * sinTheta;
+			}
+			{
+				double sinTheta = Mathd.Sin (x);
+				aroundX_w = Mathd.Cos (x);
+				aroundX_x = 1 * sinTheta;
+				aroundX_y = 0 * sinTheta;
+				aroundX_z = 0 * sinTheta;
+			}
+			{
+				double sinTheta = Mathd.Sin (z);
+				aroundZ_w = Mathd.Cos (z);
+				aroundZ_x = 0 * sinTheta;
+				aroundZ_y = 0 * sinTheta;
+				aroundZ_z = 1 * sinTheta;
+			}
+			
+//			Quaterniond xy = new Quaterniond();
+//			Quaterniond xyz = new Quaterniond();
+			
+			double xy_x, xy_y, xy_z, xy_w;
+			double xyz_x, xyz_y, xyz_z, xyz_w;
+			
+			{
+				xy_w = aroundY_w * aroundX_w - aroundY_x*aroundX_x - aroundY_y*aroundX_y - aroundY_z*aroundX_z;
+				xy_x = aroundY_w * aroundX_x + aroundY_x*aroundX_w + aroundY_y*aroundX_z - aroundY_z*aroundX_y;
+				xy_y = aroundY_w * aroundX_y - aroundY_x*aroundX_z + aroundY_y*aroundX_w + aroundY_z*aroundX_x;
+				xy_z = aroundY_w * aroundX_z + aroundY_x*aroundX_y - aroundY_y*aroundX_x + aroundY_z*aroundX_w;
+			}
+			{
+				xyz_w = xy_w * aroundZ_w - xy_x*aroundZ_x - xy_y*aroundZ_y - xy_z*aroundZ_z;
+				xyz_x = xy_w * aroundZ_x + xy_x*aroundZ_w + xy_y*aroundZ_z - xy_z*aroundZ_y;
+				xyz_y = xy_w * aroundZ_y - xy_x*aroundZ_z + xy_y*aroundZ_w + xy_z*aroundZ_x;
+				xyz_z = xy_w * aroundZ_z + xy_x*aroundZ_y - xy_y*aroundZ_x + xy_z*aroundZ_w;
+			}
+			return new Quaterniond(xyz_x, xyz_y, xyz_z, xyz_w);
+			
 		}
 
 		public static Quaterniond FromToRotation(Vector3d from, Vector3d to){
