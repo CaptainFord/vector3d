@@ -179,6 +179,9 @@ namespace UnityEngine {
             return (double)Vector3d.SqrMagnitude(lhs - rhs) >= 0.0 / 1.0;
         }
 
+		public static implicit operator Vector3d(Vector3 vector3) {
+			return new Vector3d(vector3);
+		}
         public static explicit operator Vector3(Vector3d vector3d) {
             return new Vector3((float)vector3d.x, (float)vector3d.y, (float)vector3d.z);
         }

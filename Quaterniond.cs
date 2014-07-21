@@ -344,7 +344,7 @@ namespace UnityEngine {
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
 		public static Quaterniond Euler(double x, double y, double z){
 			return Quaterniond.AngleAxis(y, Vector3d.up)
-				* Quaterniond.AngleAxis(x, Vector3d.right) 
+					* Quaterniond.AngleAxis(x, Vector3d.right) 
 					* Quaterniond.AngleAxis(z, Vector3d.forward);
 		}
 
@@ -433,10 +433,7 @@ namespace UnityEngine {
 			return !(lhs == rhs);
 		}
 		public static bool operator ==(Quaterniond lhs, Quaterniond rhs){
-			//	I think I read something about testing for equivalence basically 
-			//	amounting to checking if the dot product was close to zero
-			double dotProduct = Quaterniond.Dot (lhs, rhs);
-			return Mathd.Abs(dotProduct) < dotProductToleranceForEquals;
+			return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
 		}
 
 		public static Quaterniond operator *(Quaterniond lhs, Quaterniond rhs){
@@ -607,6 +604,14 @@ namespace UnityEngine {
 					&& Mathd.ApproximatelyFixed(lhs.y, rhs.y, toleranceBase)
 					&& Mathd.ApproximatelyFixed(lhs.z, rhs.z, toleranceBase)
 					&& Mathd.ApproximatelyFixed(lhs.w, rhs.w, toleranceBase);
+		}
+
+		static public implicit operator Quaterniond(Quaternion value) {
+			return new Quaterniond(value);
+		}
+		static public explicit operator Quaternion(Quaterniond value)
+		{
+			return value.ToFloatQuaternion();
 		}
 	}
 }

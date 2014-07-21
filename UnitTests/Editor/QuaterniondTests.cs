@@ -32,6 +32,15 @@ namespace UnityTest {
 			public Vector3d dv0, dv1;
 			public float f0;
 			public double d0;
+
+			public override string ToString(){
+				return ToString("G5");
+			}
+			public string ToString(string format){
+				return "q0=" + dq0.ToString(format) + " q1=" + dq1.ToString(format) 
+					+ " v0=" + dv0.ToString(format) + " v1=" + dv1.ToString(format) 
+					+ " d0=" + d0.ToString(format);
+			}
 		}
 
 
@@ -143,6 +152,26 @@ namespace UnityTest {
 			dAngles = set.dq1.eulerAngles;
 			
 			AssertSimilar(fAngles, dAngles);
+		}
+
+		[Test]
+		[Category ("eulerAngles")]
+		public void TestEulerAnglesConsistency (
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			){
+			TestItemSet set = testItemSets[testIndex];
+			
+			Vector3 fAngles;
+			Vector3d dAngles;
+			
+			fAngles = set.fq0.eulerAngles;
+			dAngles = set.dq1.eulerAngles;
+
+			Quaternion fresult = Quaternion.Euler(fAngles);
+			Quaterniond dresult = Quaterniond.Euler(dAngles);
+
+			AssertSimilar(fresult, set.fq0, 2d, "Unity's Quaternion");
+			AssertSimilar(dresult, set.dq0);
 		}
 
 		[Test(Description = "SetFromToRotation")]
@@ -444,6 +473,35 @@ namespace UnityTest {
 
 		[Test]
 		public void TestEquals (
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			){
+			TestItemSet set = testItemSets[testIndex];
+			string msg = set.ToString();
+
+			EqualsTest(set.fq0, set.fq0, set.dq0, set.dq0, true, msg);
+			EqualsTest(set.fq0, set.fq1, set.dq0, set.dq1, false, msg);
+		}
+
+		void EqualsTest(Quaternion q0, Quaternion q1, Quaterniond dq0, Quaterniond dq1,
+		                bool sameInstance,
+		                string msg) {
+			if(sameInstance){
+				if(!(q0.Equals(q1) && q0 == q1)){
+					Assert.Fail("Unity's Quaternion fails on self-equivalence!\n" + msg);
+				}
+				Assert.True(dq0 == dq1, msg);
+				Assert.True(dq0.Equals(dq1), msg);
+			} else {
+				if((q0.Equals(q1)) != (q0 == q1)){
+					Assert.Fail("Unity's Quaternion result of == does not match .Equals()!\n" + msg);
+				}
+				Assert.AreEqual(q0.Equals(q1),dq0.Equals(dq1), msg);
+				Assert.AreEqual(q0 == q1,dq0 == dq1, msg);
+			}
+		}
+
+		[Test]
+		public void TestApproximately (
 			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
 			){
 			//	TODO Implement Quaterniond.Equals test
