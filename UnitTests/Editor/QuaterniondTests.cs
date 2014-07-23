@@ -28,8 +28,8 @@ namespace UnityTest {
 		public struct TestItemSet {
 			public Quaternion fq0, fq1;
 			public Quaterniond dq0, dq1;
-			public Vector3 fv0, fv1;
-			public Vector3d dv0, dv1;
+			public Vector3 fv0, fv1, fEuler;
+			public Vector3d dv0, dv1, dEuler;
 			public float f0;
 			public double d0;
 
@@ -60,12 +60,14 @@ namespace UnityTest {
 			set.fq1 = GenerateRandomQuaternion(rand);
 			set.fv0 = GenerateRandomVector3(rand);
 			set.fv1 = GenerateRandomVector3(rand);
+			set.fEuler = GenerateRandomEulerAngles(rand);
 			set.f0 = (float)rand.NextDouble();
 			
 			set.dq0 = new Quaterniond(set.fq0);
 			set.dq1 = new Quaterniond(set.fq1);
 			set.dv0 = new Vector3d(set.fv0);
 			set.dv1 = new Vector3d(set.fv1);
+			set.dEuler = new Vector3d(set.fEuler);
 			set.d0 = set.f0;
 
 //			TestNormalizationOfSet(set);
@@ -86,6 +88,38 @@ namespace UnityTest {
 			}
 			if(!IsNormalized(set.dq1, floatPrecision)){
 				Debug.LogWarning("Not normalized: " + set.dq1 + " = " + GetSumOfSquares(set.dq1));
+			}
+		}
+
+		Vector3 GenerateRandomEulerAngles(System.Random rand){
+			Vector3 v3 = new Vector3();
+//			v3.x = RollBoundedDouble(rand, -90f, 90f, 0.2f);
+//			v3.x = RollBoundedDouble(rand, -180f, 180f, 0.2f);
+//			v3.x = RollBoundedDouble(rand, -180f, 180f, 0.2f);
+			v3.x = (float)(rand.NextDouble() * 180) - 90f;
+			if(v3.x < 0f){
+				v3.x += 360f;
+			}
+			v3.y = (float)(rand.NextDouble() * 360);
+			v3.z = (float)(rand.NextDouble() * 360);
+//			v3.y = RollBoundedDouble(rand, 0, 360f, 0.2f);
+//			v3.z = RollBoundedDouble(rand, 0, 360f, 0.2f);
+			return v3;
+
+		}
+
+		float RollBoundedDouble(System.Random rand, float min, float max, float boundaryChance){
+			if(rand.NextDouble() < boundaryChance){
+				switch(rand.Next() % 3){
+				case 0:
+					return min;
+				case 1:
+					return max;
+				default:
+					return (min + max) * 0.5f;
+				}
+			} else {
+				return (float)(rand.NextDouble() * (max - min) + min);
 			}
 		}
 
@@ -151,7 +185,26 @@ namespace UnityTest {
 			fAngles = set.fq0.eulerAngles;
 			dAngles = set.dq1.eulerAngles;
 			
-			AssertSimilar(fAngles, dAngles);
+			AssertSimilar(fAngles, dAngles, 360d);
+		}
+
+		[Test(Description = "eulerAngles")]
+		[Category ("eulerAngles")]
+		public void TestEulerAngles2 (
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			){
+			TestItemSet set = testItemSets[testIndex];
+
+			Quaternion q = Quaternion.Euler(set.fEuler);
+			Quaterniond dq = (Quaterniond)q;
+
+			Vector3 fAngles;
+			Vector3d dAngles;
+			
+			fAngles = q.eulerAngles;
+			dAngles = dq.eulerAngles;
+			
+			AssertSimilar(fAngles, dAngles, 360d);
 		}
 
 		[Test]
@@ -172,6 +225,49 @@ namespace UnityTest {
 
 			AssertSimilar(fresult, set.fq0, 2d, "Unity's Quaternion");
 			AssertSimilar(dresult, set.dq0);
+		}
+
+		[Test]
+		[Category ("eulerAngles")]
+		public void TestEulerAnglesConsistency2 (
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			){
+			TestItemSet set = testItemSets[testIndex];
+
+			Quaternion fresult = Quaternion.Euler(set.fEuler);
+			Quaterniond dresult = Quaterniond.Euler(set.dEuler);
+
+			Vector3 fAngles = fresult.eulerAngles;
+			Vector3d dAngles = dresult.eulerAngles;
+
+			Vector3 fExpected = set.fEuler;
+			Vector3d dExpected = set.dEuler;
+
+			for(int i=0; i<3; ++i){
+				fExpected[i] = ModAngleToMatch(fExpected[i], fAngles[i]);
+				dExpected[i] = ModAngleToMatch(dExpected[i], dAngles[i]);
+			}
+			
+//			AssertSimilar(fExpected, fAngles, 4*360.01d, "Unity's Quaternion");
+			AssertSimilar(dExpected, dAngles, 1.5*360.01d);
+		}
+		float ModAngleToMatch(float value, float matchMe){
+			while(value > matchMe + 180f){
+				value -= 360f;
+			}
+			while(value < matchMe - 180f){
+				value += 360f;
+			}
+			return value;
+		}
+		double ModAngleToMatch(double value, double matchMe){
+			while(value > matchMe + 180d){
+				value -= 360d;
+			}
+			while(value < matchMe - 180d){
+				value += 360d;
+			}
+			return value;
 		}
 
 		[Test(Description = "SetFromToRotation")]

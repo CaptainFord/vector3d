@@ -31,6 +31,9 @@ namespace UnityEngine {
 //			           + Convert.ToString(BitConverter.DoubleToInt64Bits(0.0 / 1.0),2));
 //			Vector3dEqualsInvestigation();
 //			QuaternionEqualsInvestigation();
+
+			Quaternion q = new Quaternion(-0.4850f, 0.3952f, -0.6186f, -0.4753f);
+			Debug.Log ("q.eulerAngles=" + q.eulerAngles + "\n" + new Quaterniond(q).eulerAngles);
 		}
 		static void Vector3dEqualsInvestigation(){
 			TestVector3Equals(0,0,0);
@@ -355,28 +358,238 @@ namespace UnityEngine {
 			}
 			return new Quaterniond(xyz_x, xyz_y, xyz_z, xyz_w);
 		}
+		public Vector3d eulerAngles{
+			get {
+				//	ZXYs = 3,1,1,0
+				//	ZXYr = 2,0,1,1
+				//				int[] tuple = {3,1,1,0};
+				return EulerAngles (3,1,1,0);
+//				return EulerAngles (2,0,1,1);
+//				return EulerAngles (1,1,0,0);
+			}
+		}
+		public Vector3d EulerAngles(params int[] tuple){
+//			〈a, b〉 := 〈My,x, Mz,x〉
+//			〈c, s, r〉 := Givens(a, b)
+//			sx := c*Mz,y - s*My,y
+//			cx := c*Mz,z - s*My,z
+//			θx := atan2(sx, cx)
+//			θz := atan2(r, Mx,x)
+//			θx′ := atan2(s, c)
+//			i 	n 	a 	r 		  	Sys.   		i 	n 	a 	r 		  	Sys.   		i 	n 	a 	r 		  	Sys.   		i 	n 	a 	r 		  	Sys.
+//		〈 	1 	0 	0 	0 	〉 		xzxs 	〈 	1 	0 	1 	0 	〉 		xzys 	〈 	1 	1 	0 	0 	〉 		xyxs 	〈 	1 	1 	1 	0 	〉 		xyzs
+//		〈 	2 	0 	0 	0 	〉 		yxys 	〈 	2 	0 	1 	0 	〉 		yxzs 	〈 	2 	1 	0 	0 	〉 		yzys 	〈 	2 	1 	1 	0 	〉 		yzxs
+//		〈 	3 	0 	0 	0 	〉 		zyzs 	〈 	3 	0 	1 	0 	〉 		zyxs 	〈 	3 	1 	0 	0 	〉 		zxzs 	〈 	3 	1 	1 	0 	〉 		zxys
+//		〈 	1 	0 	0 	1 	〉 		xzxr 	〈 	1 	0 	1 	1 	〉 		yzxr 	〈 	1 	1 	0 	1 	〉 		xyxr 	〈 	1 	1 	1 	1 	〉 		zyxr
+//		〈 	2 	0 	0 	1 	〉 		yxyr 	〈 	2 	0 	1 	1 	〉 		zxyr 	〈 	2 	1 	0 	1 	〉 		yzyr 	〈 	2 	1 	1 	1 	〉 		xzyr
+//		〈 	3 	0 	0 	1 	〉 		zyzr 	〈 	3 	0 	1 	1 	〉 		xyzr 	〈 	3 	1 	0 	1 	〉 		zxzr 	〈 	3 	1 	1 	1 	〉 		yxzr
 
+			//http://web.archive.org/web/20110722193141/http://cgafaq.info/wiki/Euler_angles_from_matrix
+			double[,] m = new double[,] {
+				{1 - 2*y*y - 2*z*z,	2*x*y - 2*z*w,	2*x*z + 2*y*w},
+				{2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z,	2*y*z - 2*x*w},
+				{2*x*z - 2*y*w, 2*y*z + 2*x*w,	1 - 2*x*x - 2*y*y}};
+
+			{
+				//	flips the matrix
+//				m = new double[,] {
+//					{m[0,0],m[0,1],m[0,2]},
+//					{m[1,0],m[1,1],m[1,2]},
+//					{m[2,0],m[2,1],m[2,2]},
+//
+//				};
+				m = new double[,] {
+					{m[0,0],m[1,0],m[2,0]},
+					{m[0,1],m[1,1],m[2,1]},
+					{m[0,2],m[1,2],m[2,2]},
+				};
+			}
+
+//			int[] EulNext = {y,z,x,y}
+			int[] eulNext = {1,2,3,1,2,3};
+			int i = tuple[0];
+			int neg = tuple[1];
+			int alt = tuple[2];
+			int rev = tuple[3];
+
+			int j = eulNext[i + neg];
+			int k = 6 - i - j;
+			int h = eulNext[k+(1^neg^alt)];
+			j--;k--;h--;i--;
+
+//			Debug.Log ("i=" + i + " j=" + j + " k=" + k + "h=" + h);
+			Vector3d v = new Vector3d(m[0,i],m[1,i],m[2,i]);
+			double a = v[h], b = v[k];
+			double c, s, r;
+			EulerGivens(out c, out s, out r, a, b);
+			v[h] = r;
+
+			double s1 = c * m[k,j] - s * m[h,j];
+			double c1 = c * m[k,k] - s * m[h,k];
+
+			Vector3d result = new Vector3d();
+			result.x = Mathd.Atan2(s1, c1);
+			result.y = Mathd.Atan2(v[j], v[i]);
+			result.z = Mathd.Atan2(s, c);
+
+			if(alt == 1){
+				result.z = -result.z;
+			}
+			if(neg == 1){
+				result = -result;
+			}
+			if(rev == 1){
+				result = new Vector3d(result.z, result.y, result.x);
+			}
+			for(int l=0; l<3; ++l){
+				result[l] *= Mathd.Rad2Deg;
+				if(result[l] < 0d){
+					result[l] += 360d;
+				}
+			}
+//			result = new Vector3d(result.z, result.y, result.x);
+			return result;
+
+//		〈j, k, h〉 := indices(i, neg, alt)
+//		v∗ := M∗,i
+//		〈a, b〉 := 〈vh, vk〉
+//		〈c, s, vh〉 := Givens(a, b)
+//		s1 := c*Mk,j - s*Mh,j
+//		c1 := c*Mk,k - s*Mh,k
+//		θ1 := atan2(s1, c1)
+//		θ2 := atan2(vj, vi)
+//		θ3 := atan2(s, c)
+//		if (alt = 1) then θ3 := -θ3
+//		if (neg = 1) then 〈θ1, θ2, θ3〉 := 〈-θ1, -θ2, -θ3〉
+//		if (rev = 1) then 〈θ1, θ2, θ3〉 := 〈θ3, θ2, θ1〉
+		
+
+
+		}
+
+		void EulerGivens(out double c, out double s, out double r, double a, double b){
+			if(b == 0){
+				c = Mathd.Sign(a);
+				s = 0;
+				r = Mathd.Abs(a);
+			} else if(a == 0){
+				c = 0;
+				s = Mathd.Sign(b);
+				r = Mathd.Abs(b);
+			} else if(Mathd.Abs(b) > Mathd.Abs(a)){
+				double t = ((double)a) / b;
+				double u = Mathd.Sign(b)*Mathd.Sqrt(1 + t * t);
+				s = 1 / u;
+				c = s * t;
+				r = b * u;
+			} else {
+				double t = ((double)b) / a;
+				double u = Mathd.Sign(a)*Mathd.Sqrt(1 + t * t);
+				c = 1 / u;
+				s = c * t;
+				r = a * u;
+			}
+		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public Vector3d eulerAngles {
+		public Vector3d eulerAnglesZYX {
+			get {
+				double sqx = x * x;
+				double sqy = y * y;
+				double sqz = z * z;
+				double sqw = w * w;
+				
+				double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+				double test = x * y + w * z;
+				Vector3d v;
+				
+				if (test>0.49999995d*unit) { // singularity at north pole
+					v.y = 2d * Mathd.Atan2 (y, x) * Mathd.Rad2Deg;
+					v.x = 90d;
+					v.z = 0d;
+					return v;
+				}
+				if (test<-0.49999995d*unit) { // singularity at south pole
+					v.y = -2d * Mathd.Atan2 (y, x) * Mathd.Rad2Deg;
+					v.x = -90d;
+					v.z = 0d;
+					return v;
+				}
+				v.y = Mathd.Rad2Deg * Mathd.Atan2 (2 * (z*y + w*x), 1 - 2 * (sqx + sqy));     // Yaw
+				v.x = Mathd.Rad2Deg * Mathd.Asin (-2 * (x*z + w*y));                             // Pitch
+				v.z = Mathd.Rad2Deg * Mathd.Atan2 (2 * (w*z + x*y), 1 - 2 * (sqz + sqx));      // Roll
+				
+				for(int i=0; i<3; ++i){
+					if(v[i] < 0d){
+						v[i] += 360d;
+					}
+				}
+				return v;
+
+			}
+		}
+		//	"Returns a rotation that rotates z degrees around the z axis, 
+		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
+		public Vector3d eulerAnglesSometimesWorks {
 			get {
 				//	I learned a lot from optimizing the Euler method
 				//	The most critical thing I learned is that the three quaternions generated
 				//	by Euler all have only two components. Each vector component belongs to only
 				//	one of the quaternions, and all three have a real component.
 
-				this.w =  yw * xw * zw - yy * xx * zz; 
-				this.x =  yw * xx * zw + yy * xw * zz;
-				this.y = -yw * xx * zz + yy * xw * zw;
-				this.z =  yw * xw * zz + yy * xx * zw;
-				//	Let's solve all of them for yw!
-				yw * xw * zw = this.w + yy * xx * zz; 
-				yw * xx * zw = this.x -yy * xw * zz;
-				this.y = -yw * xx * zz + yy * xw * zw;
-				this.z =  yw * xw * zz + yy * xx * zw;
+				double sqx = x * x;
+				double sqy = y * y;
+				double sqz = z * z;
+				double sqw = w * w;
 
+				double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+				double test = x * w - y * z;
+				Vector3d v;
+				
+				if (test>0.49999995d*unit) { // singularity at north pole
+					v.y = 2d * Mathd.Atan2 (y, x) * Mathd.Rad2Deg;
+					v.x = 90d;
+					v.z = 0d;
+					return v;
+				}
+				if (test<-0.49999995d*unit) { // singularity at south pole
+					v.y = -2d * Mathd.Atan2 (y, x) * Mathd.Rad2Deg;
+					v.x = -90d;
+					v.z = 0d;
+					return v;
+				}
+				v.y = Mathd.Rad2Deg * Mathd.Atan2 (2 * w * y + 2 * z * x, 1 - 2 * (x * x + y * y));     // Yaw
+				v.x = Mathd.Rad2Deg * Mathd.Asin (2 * (w * x - y * z));                             // Pitch
+				v.z = Mathd.Rad2Deg * Mathd.Atan2 (2 * w * z + 2 * x * y, 1 - 2 * (z * z + x * x));      // Roll
 
-				return new Vector3d(0d,0d,0d);
+				for(int i=0; i<3; ++i){
+					if(v[i] < 0d){
+						v[i] += 360d;
+					}
+				}
+//				v.y = Mathd.Rad2Deg * Mathd.Atan2 (2 * w * y + 2 * z * x, -sqw - sqz + sqx + sqy);     // Yaw
+//				v.x = Mathd.Rad2Deg * Mathd.Asin (2 * (w * x - y * z));                             // Pitch
+//				v.z = Mathd.Rad2Deg * Mathd.Atan2 (2 * w * z + 2 * x * y, sqw - sqz - sqx + sqy);      // Roll
+
+//				Quaterniond q = new Quaterniond (w, z, x, y);
+//				v.y = Mathd.Rad2Deg * Mathd.Atan2 (2 * q.x * q.w + 2 * q.y * q.z, 1 - 2 * (q.z * q.z + q.w * q.w));     // Yaw
+//				v.x = Mathd.Rad2Deg * Mathd.Asin (2 * (q.x * q.z - q.w * q.y));                             // Pitch
+//				v.z = Mathd.Rad2Deg * Mathd.Atan2 (2 * q.x * q.y + 2 * q.z * q.w, 1 - 2 * (q.y * q.y + q.z * q.z));      // Roll
+
+				return v;
+
+				
+//				double sqx = x * x;
+//				double sqy = y * y;
+//				double sqz = z * z;
+//				double sqw = w * w;
+//				
+//				Vector3d result = new Vector3d();
+//				result.z = Mathd.Atan2(2.0d * (x*y + z*w),(sqx - sqy - sqz + sqw)) * Mathd.Rad2Deg;
+//				result.x = Mathd.Atan2(2.0d * (y*z + x*w),(-sqx - sqy + sqz + sqw)) * Mathd.Rad2Deg;
+//				result.y = Mathd.Asin(-2.0d * (x*z - y*w)) * Mathd.Rad2Deg;
+//				
+//				return result;
 			}
 		}
 		
