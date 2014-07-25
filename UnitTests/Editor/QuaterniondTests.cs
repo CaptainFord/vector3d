@@ -183,9 +183,132 @@ namespace UnityTest {
 			Vector3d dAngles;
 
 			fAngles = set.fq0.eulerAngles;
-			dAngles = set.dq1.eulerAngles;
+			dAngles = set.dq0.eulerAngles;
 			
 			AssertSimilar(fAngles, dAngles, 360d);
+		}
+
+		public struct EulerMatch : IComparable {
+			public bool flippedMatrix;
+			public int[] tuple;
+			public string valueReorder;
+			public int[] returnOrder;
+
+			public Vector3d eulerAngles;
+			public Quaterniond reconstruction;
+
+			public Vector3d resultA;
+			public Vector3d resultB;
+
+			public double totalDiffSquared;
+
+			public EulerMatch(int tupleNum, bool flipMatrix, int reorderNum){
+				tuple = new int[4];
+				tuple[0] = (tupleNum % 3) + 1;
+				tuple[1] = (tupleNum / 3) % 2;
+				tuple[2] = (tupleNum / 6) % 2;
+				tuple[3] = (tupleNum / 12) % 2;
+				this.flippedMatrix = flipMatrix;
+				returnOrder = new int[3];
+				returnOrder[0] = reorderNum % 3;
+				returnOrder[1] = (reorderNum / 3) % 2;
+				if(returnOrder[1] >= returnOrder[0]){
+					++returnOrder[1];
+				}
+				returnOrder[2] = 3 - returnOrder[0] - returnOrder[1];
+				string[] labels = {"x","y","z"};
+				valueReorder = labels[returnOrder[0]]+labels[returnOrder[1]]+labels[returnOrder[2]];
+
+				eulerAngles = new Vector3d();
+				reconstruction = new Quaterniond();
+				resultA = new Vector3d();
+				resultB = new Vector3d();
+				totalDiffSquared = 0d;
+			}
+
+			public override string ToString(){
+				StringBuilder msg = new StringBuilder();
+				for(int i=0; i<4; ++i){
+					msg.Append(tuple[i]);
+				}
+				if(flippedMatrix){
+					msg.Append("f");
+				}
+				msg.Append("-").Append(valueReorder);
+				msg.Append(" = ").Append(resultA).Append(", ").Append(resultB);
+				msg.Append(" => ").Append(totalDiffSquared);
+				msg.Append(" (euler=" + eulerAngles.ToString("G5") + ";quat=" + reconstruction + ")");
+				return msg.ToString();
+			}
+
+			public void EvaluateAngles(Quaterniond original){
+				this.eulerAngles = original.EulerAngles(this.flippedMatrix, this.tuple);
+				this.eulerAngles = new Vector3d(this.eulerAngles[returnOrder[0]],this.eulerAngles[returnOrder[1]],this.eulerAngles[returnOrder[2]]);
+				this.reconstruction = Quaterniond.Euler(this.eulerAngles);
+			}
+
+			public void EvaluateResults(Vector3d inputA, Vector3d inputB){
+				this.resultA = this.reconstruction * inputA;
+				this.resultB = this.reconstruction * inputB;
+			}
+
+			public double CompareResults(Vector3d actualA, Vector3d actualB){
+				this.totalDiffSquared = (actualA - this.resultA).sqrMagnitude + 
+					(actualB - this.resultB).sqrMagnitude;
+				return totalDiffSquared;
+			}
+			public int CompareTo (object obj){
+				if(!(obj is EulerMatch)){
+					return -1;
+				}
+				EulerMatch other = (EulerMatch)obj;
+				return System.Math.Sign(this.totalDiffSquared - other.totalDiffSquared);
+			}
+		}
+
+		[Test(Description = "eulerAngles")]
+		[Category ("eulerAngles")]
+		public void FindBestEulerMatch (
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			){
+			TestItemSet set = testItemSets[testIndex];
+
+			Vector3d actualA = set.dq0 * set.dv0;
+			Vector3d actualB = set.dq0 * set.dv1;
+
+			EulerMatch best = new EulerMatch();
+
+			List<EulerMatch> allAttempts = new List<EulerMatch>();
+
+			int[] tuple = new int[4];
+			for(int i=0; i<24*2*6; ++i){
+				EulerMatch match = new EulerMatch(i, (i / 24) % 2 == 0, i / 48);
+				match.EvaluateAngles(set.dq0);
+				match.EvaluateResults(set.dv0, set.dv1);
+				match.CompareResults(actualA, actualB);
+				allAttempts.Add(match);
+				if(i == 0){
+					best = match;
+				} else {
+					if(match.totalDiffSquared < best.totalDiffSquared){
+						best = match;
+					}
+				}
+			}
+
+			allAttempts.Sort();
+
+			StringBuilder message = new StringBuilder();
+			message.Append("Actual Results: " + actualA + ", " + actualB);
+			message.Append("\nBest Match: " + best);
+			message.Append("\nInput Quaternion: " + set.dq0 + 
+			               "\nUnity's Euler Result: " + set.fq0.eulerAngles.ToString("G5"));
+			foreach(EulerMatch match in allAttempts){
+				message.Append("\n").Append(match.ToString());
+			}
+
+			Debug.Log (message.ToString());
+			AssertSimilar(ModAnglesToMatch((Vector3d)set.fq0.eulerAngles, best.eulerAngles), best.eulerAngles, 2 * 360d);
 		}
 
 		[Test(Description = "eulerAngles")]
@@ -268,6 +391,13 @@ namespace UnityTest {
 				value += 360d;
 			}
 			return value;
+		}
+
+		Vector3d ModAnglesToMatch(Vector3d values, Vector3d matchMe){
+			for(int i=0; i<3; ++i){
+				values[i] = ModAngleToMatch(values[i], matchMe[i]);
+			}
+			return values;
 		}
 
 		[Test(Description = "SetFromToRotation")]

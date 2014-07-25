@@ -358,17 +358,17 @@ namespace UnityEngine {
 			}
 			return new Quaterniond(xyz_x, xyz_y, xyz_z, xyz_w);
 		}
-		public Vector3d eulerAngles{
+		public Vector3d eulerAnglesBlegh{
 			get {
 				//	ZXYs = 3,1,1,0
 				//	ZXYr = 2,0,1,1
 				//				int[] tuple = {3,1,1,0};
-				return EulerAngles (3,1,1,0);
+				return EulerAngles (false, 3,1,1,0);
 //				return EulerAngles (2,0,1,1);
 //				return EulerAngles (1,1,0,0);
 			}
 		}
-		public Vector3d EulerAngles(params int[] tuple){
+		public Vector3d EulerAngles(bool flipMatrix, params int[] tuple){
 //			〈a, b〉 := 〈My,x, Mz,x〉
 //			〈c, s, r〉 := Givens(a, b)
 //			sx := c*Mz,y - s*My,y
@@ -390,7 +390,7 @@ namespace UnityEngine {
 				{2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z,	2*y*z - 2*x*w},
 				{2*x*z - 2*y*w, 2*y*z + 2*x*w,	1 - 2*x*x - 2*y*y}};
 
-			{
+			if(flipMatrix){
 				//	flips the matrix
 //				m = new double[,] {
 //					{m[0,0],m[0,1],m[0,2]},
@@ -447,6 +447,10 @@ namespace UnityEngine {
 					result[l] += 360d;
 				}
 			}
+			//	Funny thing, actually, the rotations aren't actually input in the order they're done. 
+			//	Instead, they're input by the axis they rotate around.
+			//	Since it is defined as z, x, y, and the return is in order performed, they need to be reordered like so:
+			result = new Vector3d(result.y, result.z, result.x);
 //			result = new Vector3d(result.z, result.y, result.x);
 			return result;
 
@@ -530,7 +534,7 @@ namespace UnityEngine {
 		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public Vector3d eulerAnglesSometimesWorks {
+		public Vector3d eulerAngles {
 			get {
 				//	I learned a lot from optimizing the Euler method
 				//	The most critical thing I learned is that the three quaternions generated
