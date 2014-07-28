@@ -121,7 +121,7 @@ namespace UnityEngine {
         }
 
         public static DecVector2 operator *(float d, DecVector2 a) {
-            return new DecVector2(a.x * d, a.y * d);
+			return a * ((decimal)d);
         }
 
         public static DecVector2 operator /(DecVector2 a, decimal d) {
@@ -166,7 +166,7 @@ namespace UnityEngine {
 
         public void Normalize() {
             decimal magnitude = this.magnitude;
-            if (magnitude > 9.99999974737875E-06) {
+            if (magnitude > 9.99999974737875E-06m) {
                 this = this / magnitude;
 			} else {
                 this = DecVector2.zero;

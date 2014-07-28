@@ -12,8 +12,8 @@ namespace UnityEngine {
 		public const decimal Rad2Deg = 57.2957795130823208767981548141051703324049m;
         public const decimal Epsilon = 1.401298E-45m;
 		public const decimal DefaultApproximatelyValue = 1.121039E-44m;
-		public const decimal DoublePrecision = 2.22044604925031E-16m;	//	Minimum relative value. Anything smaller than this gets rounded off. In most cases, it might be useful to double this.
-		public const decimal DoublePrecisionMultiplier = 4503599627370500m;
+		public const double DoublePrecision = 2.22044604925031E-16d;	//	Minimum relative value. Anything smaller than this gets rounded off. In most cases, it might be useful to double this.
+		public const double DoublePrecisionMultiplier = 4503599627370500d;
 		public const decimal DecimalPrecision = 2.22044604925031E-16m;	//	Minimum relative value. Anything smaller than this gets rounded off. In most cases, it might be useful to double this.
 		public const decimal DecimalPrecisionMultiplier = 4503599627370500m;
 
@@ -286,8 +286,8 @@ namespace UnityEngine {
         }
 
         public static decimal SmoothDamp(decimal current, decimal target, ref decimal currentVelocity, decimal smoothTime) {
-            decimal deltaTime = (decimal)Time.deltaTime;
-            decimal maxSpeed = decimal.MaxValue;
+            decimal deltaTime = Time.deltaTime;
+            decimal maxSpeed = decimal.PositiveInfinity;
             return MathDec.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
         }
 
@@ -318,7 +318,7 @@ namespace UnityEngine {
 
         public static decimal SmoothDampAngle(decimal current, decimal target, ref decimal currentVelocity, decimal smoothTime) {
             decimal deltaTime = (decimal)Time.deltaTime;
-            decimal maxSpeed = decimal.MaxValue;
+            decimal maxSpeed = decimal.PositiveInfinity;
             return MathDec.SmoothDampAngle(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
         }
 
@@ -332,70 +332,70 @@ namespace UnityEngine {
         }
 
         public static decimal PingPong(decimal t, decimal length) {
-            t = MathDec.Repeat(t, length * 2m);
+            t = MathDec.Repeat(t, length * 2d);
             return length - MathDec.Abs(t - length);
         }
 
         public static decimal InverseLerp(decimal from, decimal to, decimal value) {
             if (from < to) {
                 if (value < from)
-                    return 0m;
+                    return 0d;
                 if (value > to)
-                    return 1m;
+                    return 1d;
                 value -= from;
                 value /= to - from;
                 return value;
             } else {
                 if (from <= to)
-                    return 0m;
+                    return 0d;
                 if (value < to)
-                    return 1m;
+                    return 1d;
                 if (value > from)
-                    return 0m;
+                    return 0d;
                 else
-                    return (1.0m - (value - to) / (from - to));
+                    return (1.0d - (value - to) / (from - to));
             }
         }
 
         public static decimal DeltaAngle(decimal current, decimal target) {
-            decimal num = MathDec.Repeat(target - current, 360m);
-            if (num > 180.0m)
-                num -= 360m;
+            decimal num = MathDec.Repeat(target - current, 360d);
+            if (num > 180.0d)
+                num -= 360d;
             return num;
         }
 
-        internal static bool LineIntersection(DecVector2 p1, DecVector2 p2, DecVector2 p3, DecVector2 p4, ref DecVector2 result) {
+        internal static bool LineIntersection(Vector2d p1, Vector2d p2, Vector2d p3, Vector2d p4, ref Vector2d result) {
             decimal num1 = p2.x - p1.x;
             decimal num2 = p2.y - p1.y;
             decimal num3 = p4.x - p3.x;
             decimal num4 = p4.y - p3.y;
             decimal num5 = num1 * num4 - num2 * num3;
-            if (num5 == 0.0m)
+            if (num5 == 0.0d)
                 return false;
             decimal num6 = p3.x - p1.x;
             decimal num7 = p3.y - p1.y;
             decimal num8 = (num6 * num4 - num7 * num3) / num5;
-            result = new DecVector2(p1.x + num8 * num1, p1.y + num8 * num2);
+            result = new Vector2d(p1.x + num8 * num1, p1.y + num8 * num2);
             return true;
         }
 
-        internal static bool LineSegmentIntersection(DecVector2 p1, DecVector2 p2, DecVector2 p3, DecVector2 p4, ref DecVector2 result) {
+        internal static bool LineSegmentIntersection(Vector2d p1, Vector2d p2, Vector2d p3, Vector2d p4, ref Vector2d result) {
             decimal num1 = p2.x - p1.x;
             decimal num2 = p2.y - p1.y;
             decimal num3 = p4.x - p3.x;
             decimal num4 = p4.y - p3.y;
             decimal num5 = (num1 * num4 - num2 * num3);
-            if (num5 == 0.0m)
+            if (num5 == 0.0d)
                 return false;
             decimal num6 = p3.x - p1.x;
             decimal num7 = p3.y - p1.y;
             decimal num8 = (num6 * num4 - num7 * num3) / num5;
-            if (num8 < 0.0m || num8 > 1.0m)
+            if (num8 < 0.0d || num8 > 1.0d)
                 return false;
             decimal num9 = (num6 * num2 - num7 * num1) / num5;
-            if (num9 < 0.0m || num9 > 1.0m)
+            if (num9 < 0.0d || num9 > 1.0d)
                 return false;
-            result = new DecVector2(p1.x + num8 * num1, p1.y + num8 * num2);
+            result = new Vector2d(p1.x + num8 * num1, p1.y + num8 * num2);
             return true;
         }
     }

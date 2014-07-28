@@ -176,7 +176,7 @@ namespace UnityEngine {
         }
 
         public static bool operator !=(Vector3d lhs, Vector3d rhs) {
-            return (double)Vector3d.SqrMagnitude(lhs - rhs) >= 0.0 / 1.0;
+			return !(lhs == rhs);
         }
 
 		public static implicit operator Vector3d(Vector3 vector3) {

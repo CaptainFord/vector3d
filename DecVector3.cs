@@ -53,7 +53,7 @@ namespace UnityEngine {
 
         public decimal magnitude {
             get {
-                return Math.Sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+                return MathDec.Sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
             }
         }
 
@@ -176,10 +176,13 @@ namespace UnityEngine {
         }
 
         public static bool operator !=(DecVector3 lhs, DecVector3 rhs) {
-            return (decimal)DecVector3.SqrMagnitude(lhs - rhs) >= 0.0 / 1.0;
+			return !(lhs == rhs);
         }
 
 		public static implicit operator DecVector3(Vector3 vector3) {
+			return new DecVector3(vector3);
+		}
+		public static implicit operator DecVector3(Vector3d vector3) {
 			return new DecVector3(vector3);
 		}
         public static explicit operator Vector3(DecVector3 vector3d) {
@@ -241,7 +244,7 @@ namespace UnityEngine {
 
         public static DecVector3 SmoothDamp(DecVector3 current, DecVector3 target, ref DecVector3 currentVelocity, decimal smoothTime) {
             decimal deltaTime = (decimal)Time.deltaTime;
-            decimal maxSpeed = decimal.PositiveInfinity;
+            decimal maxSpeed = decimal.MaxValue;
             return DecVector3.SmoothDamp(current, target, ref currentVelocity, smoothTime, maxSpeed, deltaTime);
         }
 
@@ -258,7 +261,7 @@ namespace UnityEngine {
             DecVector3 vector3_3 = (currentVelocity + num1 * vector3_2) * deltaTime;
             currentVelocity = (currentVelocity - num1 * vector3_3) * num3;
             DecVector3 vector3_4 = target + (vector3_2 + vector3_3) * num3;
-            if (DecVector3.Dot(vector3_1 - current, vector3_4 - vector3_1) > 0.0) {
+            if (DecVector3.Dot(vector3_1 - current, vector3_4 - vector3_1) > 0.0m) {
                 vector3_4 = vector3_1;
                 currentVelocity = (vector3_4 - vector3_1) / deltaTime;
             }
@@ -276,9 +279,9 @@ namespace UnityEngine {
         }
 
 		public void Scale(Vector3 scale) {
-			this.x *= scale.x;
-			this.y *= scale.y;
-			this.z *= scale.z;
+			this.x *= (decimal)scale.x;
+			this.y *= (decimal)scale.y;
+			this.z *= (decimal)scale.z;
 		}
         public void Scale(DecVector3 scale) {
             this.x *= scale.x;
@@ -286,9 +289,9 @@ namespace UnityEngine {
             this.z *= scale.z;
         }
 		public void InverseScale(Vector3 scale){
-			this.x /= scale.x;
-			this.y /= scale.y;
-			this.z /= scale.z;
+			this.x /= (decimal)scale.x;
+			this.y /= (decimal)scale.y;
+			this.z /= (decimal)scale.z;
 		}
 		public void InverseScale(DecVector3 scale){
 			this.x /= scale.x;
@@ -338,7 +341,7 @@ namespace UnityEngine {
 
         public static DecVector3 Normalize(DecVector3 value) {
             decimal num = DecVector3.Magnitude(value);
-            if (num > 9.99999974737875E-06) {
+            if (num > 9.99999974737875E-06m) {
                 return value / num;
 			} else {
                 return DecVector3.zero;
@@ -347,7 +350,7 @@ namespace UnityEngine {
 
         public void Normalize() {
             decimal num = DecVector3.Magnitude(this);
-            if (num > 9.99999974737875E-06) {
+            if (num > 9.99999974737875E-06m) {
                 this = this / num;
 			} else {
                 this = DecVector3.zero;
@@ -389,7 +392,7 @@ namespace UnityEngine {
 
         public static decimal Distance(DecVector3 a, DecVector3 b) {
             DecVector3 vector3d = new DecVector3(a.x - b.x, a.y - b.y, a.z - b.z);
-            return Math.Sqrt(vector3d.x * vector3d.x + vector3d.y * vector3d.y + vector3d.z * vector3d.z);
+            return MathDec.Sqrt(vector3d.x * vector3d.x + vector3d.y * vector3d.y + vector3d.z * vector3d.z);
 
         }
 
@@ -403,7 +406,7 @@ namespace UnityEngine {
         }
 
         public static decimal Magnitude(DecVector3 a) {
-            return Math.Sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+            return MathDec.Sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
         }
 
         public static decimal SqrMagnitude(DecVector3 a) {
