@@ -3,168 +3,18 @@ using System;
 using System.Collections;
 
 namespace UnityEngine {
-	public struct Quaterniond {
+	public struct DecQuaternion {
 		public const string defaultNumberFormat = "G5";
 
-		public static void scratchGrounds(){
-//			Quaternion q = new Quaternion();
-//			UnityTest.QuaterniondTests tests = UnityTest.QuaterniondTests();
-//			System.Random rand = new System.Random("Nothing at all".GetHashCode());
-//			Quaterniond qd0 = RandomQuat(rand);
-//			Quaterniond qd1 = RandomQuat(rand);
-
-//			Debug.Log ("quats: " + qd0 + " " + qd1);
-//			for(int i=0; i<4; ++i){
-//				bool aFirst = i > 1;
-//				bool inverseA = i % 2 == 0;
-//				QuaternionDiffTest(qd0, qd1, aFirst, inverseA);
-//			}
-//
-//			for(int i=0; i<4; ++i){
-//				bool aFirst = i > 1;
-//				bool checkFirst = i % 2 == 0;
-//				QuaternionDiffTest2(qd0, qd1, aFirst, checkFirst);
-//			}
-
-//			Debug.Log (Convert.ToString(BitConverter.DoubleToInt64Bits(0.0),2) + "\n" 
-//			           + Convert.ToString(BitConverter.DoubleToInt64Bits(0.0 / 1.0),2));
-//			Vector3dEqualsInvestigation();
-//			QuaternionEqualsInvestigation();
-
-			Quaternion q = new Quaternion(-0.4850f, 0.3952f, -0.6186f, -0.4753f);
-			Debug.Log ("q.eulerAngles=" + q.eulerAngles + "\n" + new Quaterniond(q).eulerAngles);
-		}
-		static void Vector3dEqualsInvestigation(){
-			TestVector3Equals(0,0,0);
-			TestVector3Equals(1,1,1);
-
-		}
-		static void TestVector3Equals(double x, double y, double z){
-			Vector3d dv0 = new Vector3d(x,y,z);
-			Vector3d dv1 = new Vector3d(x,y,z);
-			Vector3 fv0 = (Vector3)dv0;
-			Vector3 fv1 = (Vector3)dv1;
-
-			Debug.Log (EqualsMessage(dv0, dv1) + "\n" + EqualsMessage(fv0, fv1));
-
-
-		}
-		static string EqualsMessage(Vector3d a, Vector3d b){
-			return (a == b) + " = (" + a + " == " + b + ") = " + (a.Equals(b));
-		}
-		static string EqualsMessage(Vector3 a, Vector3 b){
-			return (a == b) + " = (" + a + " == " + b + ") = " + (a.Equals(b));
-		}
-		static void LogEquals(Vector3 a, Vector3 b){
-			Debug.Log ((a == b) + " = (" + a + " == " + b + ")");
-		}
-		static void LogEquals(object a, object b){
-			Debug.Log ((a == b) + " = (" + a + " == " + b + ")");
-		}
-		
-		static void QuaternionEqualsInvestigation(){
-//			QuaternionEqualsInvestigation(1f, 1f, 1f, 1f);
-//			Quaternion minEquivalent;
-//			Quaternion maxEquivalent;
-
-
-		}
-
-		public static void QuaternionDiffTest2(Quaterniond a, Quaterniond b, bool aFirst, bool checkFirst){
-			Quaterniond stepOne = aFirst ? a.inverse * b : b * a.inverse;
-			string labelOne = aFirst ? "(!a*b)" : "(b*!a)";
-
-			Quaterniond stepTwo = checkFirst ? a * stepOne : stepOne * a;
-			string labelTwo = checkFirst ? "a*" + labelOne : labelOne + "*a";
-			
-			Quaterniond stepThree = checkFirst ? b * stepOne : stepOne * b;
-			string labelThree = checkFirst ? "b*" + labelOne : labelOne + "*b";
-
-			Debug.Log (labelTwo + ": " + stepTwo + " - " + b + "\n" + labelThree + ": " + stepThree + " - " + a);
-		}
-		public static void QuaternionDiffTest(Quaterniond a, Quaterniond b, bool aFirst, bool inverseFirst){
-			bool inverseA = inverseFirst ^ !aFirst;
-			string labelA = "a", labelB = "b";
-			if(inverseA){
-				a = Quaterniond.Inverse(a);
-				labelA = "!a";
-			} else {
-				b = Quaterniond.Inverse(b);
-				labelB = "!b";
-			}
-			if(aFirst){
-				QuaternionDiffTestFinish(a, b, labelA, labelB);
-			} else {
-				QuaternionDiffTestFinish(b, a, labelB, labelA);
-			}
-		}
-		public static void QuaternionDiffTestFinish(Quaterniond a, Quaterniond b, string labelA, string labelB){
-			Quaterniond result = a * b;
-			Debug.Log (labelA + "*" + labelB + "=" + result);
-		}
-			
-			public static Quaterniond RandomQuat(System.Random rand){
-			Quaterniond result = new Quaterniond();
-			for(int i=0; i<4; ++i){
-				result[i] = 2d * rand.NextDouble() - 1d;
-			}
-			return result;
-		}
-		public static void scratchGroundsNotRan(){
-			Quaternion q = new Quaternion();
-			Quaternion q2 = new Quaternion();
-			Vector3 v3 = new Vector3();
-			Object obj = new Object();
-			float f = 0f;
-
-			Debug.Log (Quaternion.identity);
-			Debug.Log (Quaternion.identity.w);
-			
-			q.RegisterInterest(obj);	//	Unnecessary
-			q.UnregisterInterest(obj);	//	Unnecessary
-			q.GetHashCode();			//	Unnecessary (probably)
-			q.SerializeToString();		//	Unnecessary
-			q.SerializeXml();			//	Unnecessary
-
-			q.Equals(q2);		//	Unnecessary (but implemented one for Quaternion)
-			q.ToString();		//	Implemented
-			q.Set(0f,0f,0f,1f);	//	Implemented
-
-			v3 = q.eulerAngles;
-			q.SetFromToRotation(v3, v3);
-			q.SetLookRotation(v3);
-			q.SetLookRotation(v3, v3);
-			q.ToAngleAxis(out f, out v3);
-
-//			q = Quaternion.Merge(v3);	//	Not documented. Hmm... wait, that's an extension method from Radical. Ignore it.
-
-			//	Static methods - Mostly constructors
-			f = Quaternion.Angle(q, q2);
-			q = Quaternion.AngleAxis(f, v3);
-			f = Quaternion.Dot(q, q2);
-			q = Quaternion.Euler(v3);
-			q = Quaternion.FromToRotation(v3, v3);
-//			q = Quaternion.identity;	//	Implemented
-			q2 = Quaternion.Inverse(q);
-			q = Quaternion.Lerp(q, q2, f);
-			q = Quaternion.LookRotation(v3);
-			q = Quaternion.RotateTowards(q, q2, f);
-			q = Quaternion.Slerp(q, q2, f);
-		}
-
-		public static Quaterniond identity {
+		public static DecQuaternion identity {
 			get {
-				return new Quaterniond(0d,0d,0d,1d);
+				return new DecQuaternion(0d,0d,0d,1d);
 			}
 		}
 
-		public static Quaterniond toDoublePrecision(Quaternion q){
-			return new Quaterniond(q.x, q.y, q.z, q.w);
-		}
+		public decimal x, y, z, w;
 
-		public double x, y, z, w;
-
-		public Quaterniond (double x, double y, double z, double w)
+		public DecQuaternion (decimal x, decimal y, decimal z, decimal w)
 		{
 			this.x = x;
 			this.y = y;
@@ -172,13 +22,19 @@ namespace UnityEngine {
 			this.w = w;
 		}
 
-		public Quaterniond (Quaternion q)
+		public DecQuaternion (double x, double y, double z, double w)
 		{
-			this.x = q.x;
-			this.y = q.y;
-			this.z = q.z;
-			this.w = q.w;
+			this.x = (decimal)x;
+			this.y = (decimal)y;
+			this.z = (decimal)z;
+			this.w = (decimal)w;
 		}
+		public DecQuaternion (float x, float y, float z, float w) 
+				: this((decimal)x,(decimal)y,(decimal)z,(decimal)w){}
+		public DecQuaternion (Quaterniond q) 
+				: this((decimal)q.x, (decimal)q.y, (decimal)q.z, (decimal)q.w) {}
+		public DecQuaternion (Quaternion q) 
+				: this((decimal)q.x, (decimal)q.y, (decimal)q.z, (decimal)q.w) {}
 		
 		public override string ToString(){
 			return ToString(defaultNumberFormat);
@@ -192,10 +48,10 @@ namespace UnityEngine {
 		}
 
 		public override bool Equals(object obj){
-			if(!(obj is Quaterniond)){
+			if(!(obj is DecQuaternion)){
 				return false;
 			}
-			Quaterniond other = (Quaterniond)obj;
+			DecQuaternion other = (DecQuaternion)obj;
 			return this.x.Equals(other.x)
 					&& this.y.Equals(other.y)
 					&& this.z.Equals(other.z)
@@ -208,7 +64,12 @@ namespace UnityEngine {
 					^ this.z.GetHashCode() << 4 
 					^ this.w.GetHashCode() >> 2;
 		}
-
+		public bool EqualTo(Quaterniond doubleQuaternion){
+			return this.x.Equals(doubleQuaternion.x)
+				&& this.y.Equals(doubleQuaternion.y)
+					&& this.z.Equals(doubleQuaternion.z)
+					&& this.w.Equals(doubleQuaternion.w);
+		}
 		public bool EqualTo(Quaternion floatQuaternion){
 			return this.x.Equals(floatQuaternion.x)
 					&& this.y.Equals(floatQuaternion.y)
@@ -216,7 +77,7 @@ namespace UnityEngine {
 	                && this.w.Equals(floatQuaternion.w);
 		}
 
-		public void Set (double x, double y, double z, double w)
+		public void Set (decimal x, decimal y, decimal z, decimal w)
 		{
 			this.x = x;
 			this.y = y;
@@ -224,74 +85,74 @@ namespace UnityEngine {
 			this.w = w;
 		}
 
-		public void SetLookRotation(Vector3d direction){
+		public void SetLookRotation(DecVector3 direction){
 			//	Okay, what we actually have going on here is two rotations. A heading and a pitch.
 			//	The heading is a rotation around the given up axis. The pitch, then, must be around an axis perpendicular to the up direction and the heading.
 			//	Not perpendicular to the direction vector and up, as I've seen in other algorithms, but perpendicular to the heading and the up axis.
-			Vector3d up = Vector3d.up;
-			Vector3d right = Vector3d.Cross(up, direction);    // The perpendicular vector to Up and Direction
-			Vector3d heading = Vector3d.Cross(right, up);   
-			this = Quaterniond.FromToRotation(heading, direction) * Quaterniond.FromToRotation(Vector3d.forward, heading);
-//			SetLookRotation(direction, Vector3d.up);
+			DecVector3 up = DecVector3.up;
+			DecVector3 right = DecVector3.Cross(up, direction);    // The perpendicular vector to Up and Direction
+			DecVector3 heading = DecVector3.Cross(right, up);   
+			this = DecQuaternion.FromToRotation(heading, direction) * DecQuaternion.FromToRotation(DecVector3.forward, heading);
+//			SetLookRotation(direction, DecVector3.up);
 		}
-		public void SetLookRotation(Vector3d direction, Vector3d up){
+		public void SetLookRotation(DecVector3 direction, DecVector3 up){
 			//	Okay, after some experimenting, I'm noticing that this version is rotating twice as far as it should when varying the up vector.
 			//	Such that when the up vector points straight down, it's the same as pointing straight up.
 
 			//	Ultimately, I think the problem stems from the fact that I assumed the camera would start tilted, which it doesn't
 
-			Vector3d right = Vector3d.Cross(up, direction);    // The perpendicular vector to Up and Direction
-			Vector3d heading = Vector3d.Cross(right, up);   
-			this = Quaterniond.FromToRotation(heading, direction) * Quaterniond.FromToRotation(Vector3d.forward, heading);
+			DecVector3 right = DecVector3.Cross(up, direction);    // The perpendicular vector to Up and Direction
+			DecVector3 heading = DecVector3.Cross(right, up);   
+			this = DecQuaternion.FromToRotation(heading, direction) * DecQuaternion.FromToRotation(DecVector3.forward, heading);
 
 			//	This correctly orients the camera along the desired axis. Now it just needs to pitch from there to ... well ... that.
-			this = Quaterniond.FromToRotation(Vector3d.up, up);
+			this = DecQuaternion.FromToRotation(DecVector3.up, up);
 
-			this = Quaterniond.FromToRotation(heading, direction) * Quaterniond.FromToRotation(this * Vector3d.forward, heading) * this;
+			this = DecQuaternion.FromToRotation(heading, direction) * DecQuaternion.FromToRotation(this * DecVector3.forward, heading) * this;
 			// And ... that's a wrap.
 		}
 
-		public void SetFromToRotation(Vector3d from, Vector3d to){
+		public void SetFromToRotation(DecVector3 from, DecVector3 to){
 			from = from.normalized;
 			to = to .normalized;
-			Vector3d axis = Vector3d.Cross(from, to);
+			DecVector3 axis = DecVector3.Cross(from, to);
 			this.x = axis.x;
 			this.y = axis.y;
 			this.z = axis.z;
-			this.w = Mathd.Sqrt(from.sqrMagnitude * to.sqrMagnitude) + Vector3d.Dot(from, to);
+			this.w = Mathd.Sqrt(from.sqrMagnitude * to.sqrMagnitude) + DecVector3.Dot(from, to);
 			this.Normalize();
 		}
 
-		public void ToAngleAxis(out double angle, out Vector3d axis){
+		public void ToAngleAxis(out decimal angle, out DecVector3 axis){
 			//	http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
 			this.Normalize();
 
-			double halfAngleInRadians = Mathd.Acos(this.w);
-			double inverseSinAngle = 1.0d / Mathd.Sqrt (1d - this.w * this.w);
+			decimal halfAngleInRadians = Mathd.Acos(this.w);
+			decimal inverseSinAngle = 1.0d / Mathd.Sqrt (1d - this.w * this.w);
 			angle = halfAngleInRadians * 2.0d * Mathd.Rad2Deg;
-			axis = new Vector3d(this.x * inverseSinAngle, 
+			axis = new DecVector3(this.x * inverseSinAngle, 
 			                    this.y * inverseSinAngle, 
 			                    this.z * inverseSinAngle).normalized;
 		}
 
-		public Quaterniond inverse {
+		public DecQuaternion inverse {
 			get {
-				return Quaterniond.Inverse(this);
+				return DecQuaternion.Inverse(this);
 			}
 		}
 
-		public static double Angle(Quaterniond a, Quaterniond b){
+		public static decimal Angle(DecQuaternion a, DecQuaternion b){
 			//	The calculation of the angle is part of how ToAngleAxis works
-			double angle = Mathd.Acos((a.inverse * b).w) * 2.0d * Mathd.Rad2Deg;
+			decimal angle = Mathd.Acos((a.inverse * b).w) * 2.0d * Mathd.Rad2Deg;
 			return angle > 180d ? 360d - angle : angle;
 		}
 
-		public static Quaterniond AngleAxis(double angle, Vector3d axis){
+		public static DecQuaternion AngleAxis(decimal angle, DecVector3 axis){
 			axis = axis.normalized;
 			angle = Mathd.Deg2Rad * angle * 0.5d;
 
-			Quaterniond result = new Quaterniond();
-			double sinTheta = Mathd.Sin (angle);
+			DecQuaternion result = new DecQuaternion();
+			decimal sinTheta = Mathd.Sin (angle);
 			result.w = Mathd.Cos (angle);
 			result.x = axis.x * sinTheta;
 			result.y = axis.y * sinTheta;
@@ -299,33 +160,33 @@ namespace UnityEngine {
 
 			return result;
 		}
-		public static double Dot(Quaterniond a, Quaterniond b){
+		public static decimal Dot(DecQuaternion a, DecQuaternion b){
 			return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public static Quaterniond Euler(Vector3d euler){
+		public static DecQuaternion Euler(DecVector3 euler){
 			return Euler(euler.x, euler.y, euler.z);
 		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-//		public static Quaterniond EulerOld(double x, double y, double z){
-//			return Quaterniond.AngleAxis(y, Vector3d.up)
-//					* Quaterniond.AngleAxis(x, Vector3d.right) 
-//					* Quaterniond.AngleAxis(z, Vector3d.forward);
+//		public static DecQuaternion EulerOld(decimal x, decimal y, decimal z){
+//			return DecQuaternion.AngleAxis(y, DecVector3.up)
+//					* DecQuaternion.AngleAxis(x, DecVector3.right) 
+//					* DecQuaternion.AngleAxis(z, DecVector3.forward);
 //		}
 		//	I would like to do some benchmarking to compare the old version to this new one
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public static Quaterniond Euler(double xIn, double yIn, double zIn){
-			double mult = Mathd.Deg2Rad * 0.5d;
-			double x = xIn * mult;
-			double y = yIn * mult;
-			double z = zIn * mult;
+		public static DecQuaternion Euler(decimal xIn, decimal yIn, decimal zIn){
+			decimal mult = Mathd.Deg2Rad * 0.5d;
+			decimal x = xIn * mult;
+			decimal y = yIn * mult;
+			decimal z = zIn * mult;
 			
-			double aroundX_x, aroundX_w;
-			double aroundY_y, aroundY_w;
-			double aroundZ_z, aroundZ_w;
+			decimal aroundX_x, aroundX_w;
+			decimal aroundY_y, aroundY_w;
+			decimal aroundZ_z, aroundZ_w;
 			
 			{
 				aroundY_w = Mathd.Cos (y);
@@ -340,8 +201,8 @@ namespace UnityEngine {
 				aroundZ_z = Mathd.Sin (z);
 			}
 			
-			double xy_x, xy_y, xy_z, xy_w;
-			double xyz_x, xyz_y, xyz_z, xyz_w;
+			decimal xy_x, xy_y, xy_z, xy_w;
+			decimal xyz_x, xyz_y, xyz_z, xyz_w;
 			
 			{
 				xy_w =  aroundY_w * aroundX_w;
@@ -355,9 +216,9 @@ namespace UnityEngine {
 				xyz_y = -xy_x * aroundZ_z + xy_y * aroundZ_w;
 				xyz_z =  xy_w * aroundZ_z + xy_z * aroundZ_w;
 			}
-			return new Quaterniond(xyz_x, xyz_y, xyz_z, xyz_w);
+			return new DecQuaternion(xyz_x, xyz_y, xyz_z, xyz_w);
 		}
-		public Vector3d eulerAnglesBlegh{
+		public DecVector3 eulerAnglesBlegh{
 			get {
 				//	ZXYs = 3,1,1,0
 				//	ZXYr = 2,0,1,1
@@ -367,7 +228,7 @@ namespace UnityEngine {
 //				return EulerAngles (1,1,0,0);
 			}
 		}
-		public Vector3d EulerAngles(bool flipMatrix, params int[] tuple){
+		public DecVector3 EulerAngles(bool flipMatrix, params int[] tuple){
 //			〈a, b〉 := 〈My,x, Mz,x〉
 //			〈c, s, r〉 := Givens(a, b)
 //			sx := c*Mz,y - s*My,y
@@ -384,20 +245,20 @@ namespace UnityEngine {
 //		〈 	3 	0 	0 	1 	〉 		zyzr 	〈 	3 	0 	1 	1 	〉 		xyzr 	〈 	3 	1 	0 	1 	〉 		zxzr 	〈 	3 	1 	1 	1 	〉 		yxzr
 
 			//http://web.archive.org/web/20110722193141/http://cgafaq.info/wiki/Euler_angles_from_matrix
-			double[,] m = new double[,] {
+			decimal[,] m = new decimal[,] {
 				{1 - 2*y*y - 2*z*z,	2*x*y - 2*z*w,	2*x*z + 2*y*w},
 				{2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z,	2*y*z - 2*x*w},
 				{2*x*z - 2*y*w, 2*y*z + 2*x*w,	1 - 2*x*x - 2*y*y}};
 
 			if(flipMatrix){
 				//	flips the matrix
-//				m = new double[,] {
+//				m = new decimal[,] {
 //					{m[0,0],m[0,1],m[0,2]},
 //					{m[1,0],m[1,1],m[1,2]},
 //					{m[2,0],m[2,1],m[2,2]},
 //
 //				};
-				m = new double[,] {
+				m = new decimal[,] {
 					{m[0,0],m[1,0],m[2,0]},
 					{m[0,1],m[1,1],m[2,1]},
 					{m[0,2],m[1,2],m[2,2]},
@@ -417,16 +278,16 @@ namespace UnityEngine {
 			j--;k--;h--;i--;
 
 //			Debug.Log ("i=" + i + " j=" + j + " k=" + k + "h=" + h);
-			Vector3d v = new Vector3d(m[0,i],m[1,i],m[2,i]);
-			double a = v[h], b = v[k];
-			double c, s, r;
+			DecVector3 v = new DecVector3(m[0,i],m[1,i],m[2,i]);
+			decimal a = v[h], b = v[k];
+			decimal c, s, r;
 			EulerGivens(out c, out s, out r, a, b);
 			v[h] = r;
 
-			double s1 = c * m[k,j] - s * m[h,j];
-			double c1 = c * m[k,k] - s * m[h,k];
+			decimal s1 = c * m[k,j] - s * m[h,j];
+			decimal c1 = c * m[k,k] - s * m[h,k];
 
-			Vector3d result = new Vector3d();
+			DecVector3 result = new DecVector3();
 			result.x = Mathd.Atan2(s1, c1);
 			result.y = Mathd.Atan2(v[j], v[i]);
 			result.z = Mathd.Atan2(s, c);
@@ -438,7 +299,7 @@ namespace UnityEngine {
 				result = -result;
 			}
 			if(rev == 1){
-				result = new Vector3d(result.z, result.y, result.x);
+				result = new DecVector3(result.z, result.y, result.x);
 			}
 			for(int l=0; l<3; ++l){
 				result[l] *= Mathd.Rad2Deg;
@@ -449,8 +310,8 @@ namespace UnityEngine {
 			//	Funny thing, actually, the rotations aren't actually input in the order they're done. 
 			//	Instead, they're input by the axis they rotate around.
 			//	Since it is defined as z, x, y, and the return is in order performed, they need to be reordered like so:
-			result = new Vector3d(result.y, result.z, result.x);
-//			result = new Vector3d(result.z, result.y, result.x);
+			result = new DecVector3(result.y, result.z, result.x);
+//			result = new DecVector3(result.z, result.y, result.x);
 			return result;
 
 //		〈j, k, h〉 := indices(i, neg, alt)
@@ -470,7 +331,7 @@ namespace UnityEngine {
 
 		}
 
-		void EulerGivens(out double c, out double s, out double r, double a, double b){
+		void EulerGivens(out decimal c, out decimal s, out decimal r, decimal a, decimal b){
 			if(b == 0){
 				c = Mathd.Sign(a);
 				s = 0;
@@ -480,14 +341,14 @@ namespace UnityEngine {
 				s = Mathd.Sign(b);
 				r = Mathd.Abs(b);
 			} else if(Mathd.Abs(b) > Mathd.Abs(a)){
-				double t = ((double)a) / b;
-				double u = Mathd.Sign(b)*Mathd.Sqrt(1 + t * t);
+				decimal t = ((decimal)a) / b;
+				decimal u = Mathd.Sign(b)*Mathd.Sqrt(1 + t * t);
 				s = 1 / u;
 				c = s * t;
 				r = b * u;
 			} else {
-				double t = ((double)b) / a;
-				double u = Mathd.Sign(a)*Mathd.Sqrt(1 + t * t);
+				decimal t = ((decimal)b) / a;
+				decimal u = Mathd.Sign(a)*Mathd.Sqrt(1 + t * t);
 				c = 1 / u;
 				s = c * t;
 				r = a * u;
@@ -495,16 +356,16 @@ namespace UnityEngine {
 		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public Vector3d eulerAnglesZYX {
+		public DecVector3 eulerAnglesZYX {
 			get {
-				double sqx = x * x;
-				double sqy = y * y;
-				double sqz = z * z;
-				double sqw = w * w;
+				decimal sqx = x * x;
+				decimal sqy = y * y;
+				decimal sqz = z * z;
+				decimal sqw = w * w;
 				
-				double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
-				double test = x * y + w * z;
-				Vector3d v;
+				decimal unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+				decimal test = x * y + w * z;
+				DecVector3 v;
 				
 				if (test>0.49999995d*unit) { // singularity at north pole
 					v.y = 2d * Mathd.Atan2 (y, x) * Mathd.Rad2Deg;
@@ -533,21 +394,21 @@ namespace UnityEngine {
 		}
 		//	"Returns a rotation that rotates z degrees around the z axis, 
 		//	x degrees around the x axis, and y degrees around the y axis (in that order)."
-		public Vector3d eulerAngles {
+		public DecVector3 eulerAngles {
 			get {
 				//	I learned a lot from optimizing the Euler method
 				//	The most critical thing I learned is that the three quaternions generated
 				//	by Euler all have only two components. Each vector component belongs to only
 				//	one of the quaternions, and all three have a real component.
 
-				double sqx = x * x;
-				double sqy = y * y;
-				double sqz = z * z;
-				double sqw = w * w;
+				decimal sqx = x * x;
+				decimal sqy = y * y;
+				decimal sqz = z * z;
+				decimal sqw = w * w;
 
-				double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
-				double test = x * w - y * z;
-				Vector3d v;
+				decimal unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+				decimal test = x * w - y * z;
+				DecVector3 v;
 				
 				if (test>0.49999995d*unit) { // singularity at north pole
 					v.y = 2d * Mathd.Atan2 (y, x) * Mathd.Rad2Deg;
@@ -574,7 +435,7 @@ namespace UnityEngine {
 //				v.x = Mathd.Rad2Deg * Mathd.Asin (2 * (w * x - y * z));                             // Pitch
 //				v.z = Mathd.Rad2Deg * Mathd.Atan2 (2 * w * z + 2 * x * y, sqw - sqz - sqx + sqy);      // Roll
 
-//				Quaterniond q = new Quaterniond (w, z, x, y);
+//				DecQuaternion q = new DecQuaternion (w, z, x, y);
 //				v.y = Mathd.Rad2Deg * Mathd.Atan2 (2 * q.x * q.w + 2 * q.y * q.z, 1 - 2 * (q.z * q.z + q.w * q.w));     // Yaw
 //				v.x = Mathd.Rad2Deg * Mathd.Asin (2 * (q.x * q.z - q.w * q.y));                             // Pitch
 //				v.z = Mathd.Rad2Deg * Mathd.Atan2 (2 * q.x * q.y + 2 * q.z * q.w, 1 - 2 * (q.y * q.y + q.z * q.z));      // Roll
@@ -582,12 +443,12 @@ namespace UnityEngine {
 				return v;
 
 				
-//				double sqx = x * x;
-//				double sqy = y * y;
-//				double sqz = z * z;
-//				double sqw = w * w;
+//				decimal sqx = x * x;
+//				decimal sqy = y * y;
+//				decimal sqz = z * z;
+//				decimal sqw = w * w;
 //				
-//				Vector3d result = new Vector3d();
+//				DecVector3 result = new DecVector3();
 //				result.z = Mathd.Atan2(2.0d * (x*y + z*w),(sqx - sqy - sqz + sqw)) * Mathd.Rad2Deg;
 //				result.x = Mathd.Atan2(2.0d * (y*z + x*w),(-sqx - sqy + sqz + sqw)) * Mathd.Rad2Deg;
 //				result.y = Mathd.Asin(-2.0d * (x*z - y*w)) * Mathd.Rad2Deg;
@@ -596,7 +457,7 @@ namespace UnityEngine {
 			}
 		}
 		
-		public Vector3d eulerAnglesWrong {
+		public DecVector3 eulerAnglesWrong {
 			get {
 				//				heading = atan2(2*qy*qw-2*qx*qz , 1 - 2*qy2 - 2*qz2)
 				//					attitude = asin(2*qx*qy + 2*qz*qw)
@@ -610,9 +471,9 @@ namespace UnityEngine {
 				//						which gives:
 				//						heading = -2 * atan2(x,w)
 				//						bank = 0
-				double heading, attitude, bank;
+				decimal heading, attitude, bank;
 				attitude = Mathd.Asin (2*x*y + 2*z*w);
-				double poleCheck = x * y + z * w;
+				decimal poleCheck = x * y + z * w;
 				if(poleCheck == 0.5d){ 
 					//	"North Pole"
 					bank = 0;
@@ -625,72 +486,72 @@ namespace UnityEngine {
 					heading = Mathd.Atan2 (2*y*w - 2*x*z, 1 - 2*y*y - 2*z*z);
 					bank = Mathd.Atan2(2*x*w - 2*y*z,1 - 2*x*x - 2*z*z);
 				}
-				return new Vector3d(heading * Mathd.Rad2Deg, 
+				return new DecVector3(heading * Mathd.Rad2Deg, 
 				                    attitude * Mathd.Rad2Deg, 
 				                    bank * Mathd.Rad2Deg);
 			}
 		}
 
-		public static Quaterniond FromToRotation(Vector3d from, Vector3d to){
-			Quaterniond result = new Quaterniond();
+		public static DecQuaternion FromToRotation(DecVector3 from, DecVector3 to){
+			DecQuaternion result = new DecQuaternion();
 			result.SetFromToRotation(from, to);
 			return result;
 		}
-		public static Quaterniond FromToRotation(Quaterniond from, Quaterniond to){
-			return Quaterniond.Inverse(from) * to;
+		public static DecQuaternion FromToRotation(DecQuaternion from, DecQuaternion to){
+			return DecQuaternion.Inverse(from) * to;
 		}
-		public static Quaterniond Inverse(Quaternion rotation){
-			Quaterniond result = new Quaterniond();
+		public static DecQuaternion Inverse(Quaternion rotation){
+			DecQuaternion result = new DecQuaternion();
 			result.x = -rotation.x;
 			result.y = -rotation.y;
 			result.z = -rotation.z;
 			result.w = rotation.w;
 			return result;
 		}
-		public static Quaterniond Inverse(Quaterniond rotation){
-			Quaterniond result = new Quaterniond();
+		public static DecQuaternion Inverse(DecQuaternion rotation){
+			DecQuaternion result = new DecQuaternion();
 			result.x = -rotation.x;
 			result.y = -rotation.y;
 			result.z = -rotation.z;
 			result.w = rotation.w;
 			return result;
 		}
-		public static Quaterniond Lerp(Quaterniond from, Quaterniond to, double t){
+		public static DecQuaternion Lerp(DecQuaternion from, DecQuaternion to, decimal t){
 			from = from.normalized;
 			to = to.normalized;
-			double multA = 1 - t;
-			double multB = t;
+			decimal multA = 1 - t;
+			decimal multB = t;
 
-			if(Quaterniond.Dot(from, to) < 0d){
+			if(DecQuaternion.Dot(from, to) < 0d){
 				from = -from;
 			}
 			
-			return new Quaterniond(
+			return new DecQuaternion(
 				from.x * multA + to.x * multB,
 				from.y * multA + to.y * multB,
 				from.z * multA + to.z * multB,
 				from.w * multA + to.w * multB
 				).normalized;
 		}
-		public static Quaterniond LookRotation(Vector3d forward){
-			return LookRotation (forward, Vector3d.up);
+		public static DecQuaternion LookRotation(DecVector3 forward){
+			return LookRotation (forward, DecVector3.up);
 		}
-		public static Quaterniond LookRotation(Vector3d forward, Vector3d upwards){
-			Quaterniond rotation = new Quaterniond();
+		public static DecQuaternion LookRotation(DecVector3 forward, DecVector3 upwards){
+			DecQuaternion rotation = new DecQuaternion();
 			rotation.SetLookRotation(forward, upwards);
 			return rotation;
 		}
-		public static Quaterniond RotateTowards(Quaterniond from, Quaterniond to, double maxDegreesDelta){
-			double angle = Quaterniond.Angle(from, to);
-			double t = angle > maxDegreesDelta  ? maxDegreesDelta / angle : 1d;
-//			Quaterniond difference = to.inverse * from;
-			return Quaterniond.Slerp(from, to, t);
+		public static DecQuaternion RotateTowards(DecQuaternion from, DecQuaternion to, decimal maxDegreesDelta){
+			decimal angle = DecQuaternion.Angle(from, to);
+			decimal t = angle > maxDegreesDelta  ? maxDegreesDelta / angle : 1d;
+//			DecQuaternion difference = to.inverse * from;
+			return DecQuaternion.Slerp(from, to, t);
 		}
-		public static Quaterniond Slerp(Quaterniond from, Quaterniond to, double t){
+		public static DecQuaternion Slerp(DecQuaternion from, DecQuaternion to, decimal t){
 			from = from.normalized;
 			to = to.normalized;
 
-			double dot = Quaterniond.Dot(from, to);
+			decimal dot = DecQuaternion.Dot(from, to);
 			if(dot < 0d){
 				from = -from;
 				dot = -dot;
@@ -700,15 +561,15 @@ namespace UnityEngine {
 			}
 //			dot = Mathd.Clamp(dot, -1d, 1d);
 
-			double theta =  Mathd.Acos(dot) * t;
+			decimal theta =  Mathd.Acos(dot) * t;
 			;
-			double multA = Mathd.Cos(theta);
-			double multB = Mathd.Sin(theta);
+			decimal multA = Mathd.Cos(theta);
+			decimal multB = Mathd.Sin(theta);
 
-			Quaterniond c = to - from * dot;
+			DecQuaternion c = to - from * dot;
 			c.Normalize();
 
-			return new Quaterniond(
+			return new DecQuaternion(
 				from.x * multA + c.x * multB,
 				from.y * multA + c.y * multB,
 				from.z * multA + c.z * multB,
@@ -716,19 +577,19 @@ namespace UnityEngine {
 				).normalized;
 		}
 
-		public static Quaterniond operator -(Quaterniond q){
-			return new Quaterniond(-q.x, -q.y, -q.z, -q.w);
+		public static DecQuaternion operator -(DecQuaternion q){
+			return new DecQuaternion(-q.x, -q.y, -q.z, -q.w);
 		}
 
-		public static bool operator !=(Quaterniond lhs, Quaterniond rhs){
+		public static bool operator !=(DecQuaternion lhs, DecQuaternion rhs){
 			return !(lhs == rhs);
 		}
-		public static bool operator ==(Quaterniond lhs, Quaterniond rhs){
+		public static bool operator ==(DecQuaternion lhs, DecQuaternion rhs){
 			return lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z && lhs.w == rhs.w;
 		}
 
-		public static Quaterniond operator *(Quaterniond lhs, Quaterniond rhs){
-			Quaterniond result = new Quaterniond();
+		public static DecQuaternion operator *(DecQuaternion lhs, DecQuaternion rhs){
+			DecQuaternion result = new DecQuaternion();
 			result.w = lhs.w * rhs.w - lhs.x*rhs.x - lhs.y*rhs.y - lhs.z*rhs.z;
 			result.x = lhs.w * rhs.x + lhs.x*rhs.w + lhs.y*rhs.z - lhs.z*rhs.y;
 			result.y = lhs.w * rhs.y - lhs.x*rhs.z + lhs.y*rhs.w + lhs.z*rhs.x;
@@ -736,8 +597,8 @@ namespace UnityEngine {
 			return result;
 		}
 
-		public static Quaterniond operator *(Quaterniond lhs, double rhs){
-			Quaterniond result = new Quaterniond();
+		public static DecQuaternion operator *(DecQuaternion lhs, decimal rhs){
+			DecQuaternion result = new DecQuaternion();
 			result.w = lhs.w * rhs;
 			result.x = lhs.x * rhs;
 			result.y = lhs.y * rhs;
@@ -745,75 +606,75 @@ namespace UnityEngine {
 			return result;
 		}
 		
-		public static Quaterniond operator *(Quaterniond lhs, Quaternion rhs){
-			return lhs * new Quaterniond(rhs);
+		public static DecQuaternion operator *(DecQuaternion lhs, Quaternion rhs){
+			return lhs * new DecQuaternion(rhs);
 		}
 
-		public static Quaterniond operator +(Quaterniond lhs, Quaterniond rhs){
-			return new Quaterniond(lhs.x + rhs.x,
+		public static DecQuaternion operator +(DecQuaternion lhs, DecQuaternion rhs){
+			return new DecQuaternion(lhs.x + rhs.x,
 			                       lhs.y + rhs.y, 
 			                       lhs.z + rhs.z, 
 			                       lhs.w + rhs.w);
 		}	
-		public static Quaterniond operator -(Quaterniond lhs, Quaterniond rhs){
-			return new Quaterniond(lhs.x - rhs.x,
+		public static DecQuaternion operator -(DecQuaternion lhs, DecQuaternion rhs){
+			return new DecQuaternion(lhs.x - rhs.x,
 			                       lhs.y - rhs.y, 
 			                       lhs.z - rhs.z, 
 			                       lhs.w - rhs.w);
 		}
 
-		public static Vector3d operator *(Quaterniond lhs, Vector3 rhs){
+		public static DecVector3 operator *(DecQuaternion lhs, Vector3 rhs){
 			return lhs.Multiply(rhs);
 		}
-		public static Vector3d operator *(Quaterniond lhs, Vector3d rhs){
+		public static DecVector3 operator *(DecQuaternion lhs, DecVector3 rhs){
 			return lhs.Multiply(rhs);
 		}
-		public Vector3d Multiply(Vector3 rhs){
-			return Multiply ((Vector3d)rhs);
+		public DecVector3 Multiply(Vector3 rhs){
+			return Multiply ((DecVector3)rhs);
 		}
-		public Vector3d Multiply(Vector3d rhs){
-			double xx = x*x*2;
-			double xy = x*y*2;
-			double xz = x*z*2;
-			double xw = x*z*2;
-			double yy = y*y*2;
-			double yz = y*z*2;
-			double yw = y*z*2;
-			double zz = z*z*2;
-			double zw = z*z*2;
-			return new Vector3d(
+		public DecVector3 Multiply(DecVector3 rhs){
+			decimal xx = x*x*2;
+			decimal xy = x*y*2;
+			decimal xz = x*z*2;
+			decimal xw = x*z*2;
+			decimal yy = y*y*2;
+			decimal yz = y*z*2;
+			decimal yw = y*z*2;
+			decimal zz = z*z*2;
+			decimal zw = z*z*2;
+			return new DecVector3(
 				//	ABij = A
 				rhs.x * (1 - yy - zz) 	+ rhs.y * (xy - zw) 	+ rhs.z * (xz + yw),
 				rhs.x * (xy + zw) 		+ rhs.y * (1 - xx - zz) + rhs.z * (yz - xw),
 				rhs.x * (xz - yw) 		+ rhs.y * (yz + xw) 	+ rhs.z * (1 - xx - yy)
 				);
 		}
-		public Vector3d InverseMultiply(Vector3 rhs){
-			return InverseMultiply((Vector3d)rhs);
+		public DecVector3 InverseMultiply(Vector3 rhs){
+			return InverseMultiply((DecVector3)rhs);
 		}
-		public Vector3d InverseMultiply(Vector3d rhs){
-			double xx = x*x*2;
-			double xy = x*y*2;
-			double xz = x*z*2;
-			double xw = -x*z*2;
-			double yy = y*y*2;
-			double yz = y*z*2;
-			double yw = -y*z*2;
-			double zz = z*z*2;
-			double zw = -z*z*2;
-			return new Vector3d(
+		public DecVector3 InverseMultiply(DecVector3 rhs){
+			decimal xx = x*x*2;
+			decimal xy = x*y*2;
+			decimal xz = x*z*2;
+			decimal xw = -x*z*2;
+			decimal yy = y*y*2;
+			decimal yz = y*z*2;
+			decimal yw = -y*z*2;
+			decimal zz = z*z*2;
+			decimal zw = -z*z*2;
+			return new DecVector3(
 				//	ABij = A
 				rhs.x * (1 - yy - zz) 	+ rhs.y * (xy - zw) 	+ rhs.z * (xz + yw),
 				rhs.x * (xy + zw) 		+ rhs.y * (1 - xx - zz) + rhs.z * (yz - xw),
 				rhs.x * (xz - yw) 		+ rhs.y * (yz + xw) 	+ rhs.z * (1 - xx - yy)
 				);
 		}
-//		Vector3d MultiplyOld(Vector3d rhs){
-//			double[,] rotationMatrix = new double[,] {
+//		DecVector3 MultiplyOld(DecVector3 rhs){
+//			decimal[,] rotationMatrix = new decimal[,] {
 //				{1 - 2*y*y - 2*z*z,	2*x*y - 2*z*w,	2*x*z + 2*y*w},
 //				{2*x*y + 2*z*w, 1 - 2*x*x - 2*z*z,	2*y*z - 2*x*w},
 //				{2*x*z - 2*y*w, 2*y*z + 2*x*w,	1 - 2*x*x - 2*y*y}};
-//			Vector3d result = new Vector3d(
+//			DecVector3 result = new DecVector3(
 //				//	ABij = A
 //				rhs.x * rotationMatrix[0,0] + rhs.y * rotationMatrix[0,1] + rhs.z * rotationMatrix[0,2],
 //				rhs.x * rotationMatrix[1,0] + rhs.y * rotationMatrix[1,1] + rhs.z * rotationMatrix[1,2],
@@ -823,7 +684,7 @@ namespace UnityEngine {
 //		}
 
 
-		public double this[int index]{
+		public decimal this[int index]{
 			get {
 				switch(index){
 				case 0:
@@ -861,20 +722,20 @@ namespace UnityEngine {
 		}
 
 		public void Normalize(){
-			double sum = this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z;
-//			double magnitudeInverse = Mathd.Sign (this.w) / System.Math.Sqrt(sum);
-			double magnitudeInverse = 1d / System.Math.Sqrt(sum);
+			decimal sum = this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z;
+//			decimal magnitudeInverse = Mathd.Sign (this.w) / System.Math.Sqrt(sum);
+			decimal magnitudeInverse = 1d / System.Math.Sqrt(sum);
 			this.w *= magnitudeInverse;
 			this.x *= magnitudeInverse;
 			this.y *= magnitudeInverse;
 			this.z *= magnitudeInverse;
 		}
 //		public void NormalizeOld(){
-//			double sum = 0;
+//			decimal sum = 0;
 //			for (int i = 0; i < 4; ++i){
 //				sum += this[i] * this[i];
 //			}
-//			double magnitudeInverse = Mathd.Sign (this.w) / System.Math.Sqrt(sum);
+//			decimal magnitudeInverse = Mathd.Sign (this.w) / System.Math.Sqrt(sum);
 //			for (int i = 0; i < 4; ++i){
 //				this[i] *= magnitudeInverse;
 //			}
@@ -888,23 +749,23 @@ namespace UnityEngine {
 			}
 		}
 
-		public Quaterniond normalized
+		public DecQuaternion normalized
 		{
 			get {
-				double sum = 0;
+				decimal sum = 0;
 				for (int i = 0; i < 4; ++i){
 					sum += this[i] * this[i];
 				}
-				double magnitudeInverse = 1d / System.Math.Sqrt(sum);
-				return new Quaterniond(this.x * magnitudeInverse,
+				decimal magnitudeInverse = 1d / System.Math.Sqrt(sum);
+				return new DecQuaternion(this.x * magnitudeInverse,
 				                       this.y * magnitudeInverse,
 				                       this.z * magnitudeInverse,
 				                       this.w * magnitudeInverse);
 			}
 		}
 
-		public double GetSumOfSquares(){
-			double sum = 0;
+		public decimal GetSumOfSquares(){
+			decimal sum = 0;
 			for(int i=0; i<4; ++i){
 				sum += this[i] * this[i];
 			}
@@ -917,27 +778,27 @@ namespace UnityEngine {
 
 		/**
 		 *	Tests if the values of the vector are approximately equal. The value of precisionBase is a multiple of the
-		 *	base precision of a double, which is itself multiplied by the values to determine the tolerance. Any value
+		 *	base precision of a decimal, which is itself multiplied by the values to determine the tolerance. Any value
 		 *	less than zero means "must be exactly zero".
 		 */
-		public static bool Approximately(Quaterniond lhs, Quaterniond rhs, double toleranceMultiplier){
+		public static bool Approximately(DecQuaternion lhs, DecQuaternion rhs, decimal toleranceMultiplier){
 			return Mathd.ApproximatelyRelative(lhs.x, rhs.x, toleranceMultiplier) 
 				&& Mathd.ApproximatelyRelative(lhs.y, rhs.y, toleranceMultiplier)
 					&& Mathd.ApproximatelyRelative(lhs.z, rhs.z, toleranceMultiplier)
 			&& Mathd.ApproximatelyRelative(lhs.w, rhs.w, toleranceMultiplier);
 		}
 		
-		public static bool ApproximatelyFixed(Quaterniond lhs, Quaterniond rhs, double toleranceBase){
+		public static bool ApproximatelyFixed(DecQuaternion lhs, DecQuaternion rhs, decimal toleranceBase){
 			return Mathd.ApproximatelyFixed(lhs.x, rhs.x, toleranceBase) 
 					&& Mathd.ApproximatelyFixed(lhs.y, rhs.y, toleranceBase)
 					&& Mathd.ApproximatelyFixed(lhs.z, rhs.z, toleranceBase)
 					&& Mathd.ApproximatelyFixed(lhs.w, rhs.w, toleranceBase);
 		}
 
-		static public implicit operator Quaterniond(Quaternion value) {
-			return new Quaterniond(value);
+		static public implicit operator DecQuaternion(Quaternion value) {
+			return new DecQuaternion(value);
 		}
-		static public explicit operator Quaternion(Quaterniond value)
+		static public explicit operator Quaternion(DecQuaternion value)
 		{
 			return value.ToFloatQuaternion();
 		}

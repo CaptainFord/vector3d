@@ -275,11 +275,26 @@ namespace UnityEngine {
             return new Vector3d(a.x * b.x, a.y * b.y, a.z * b.z);
         }
 
+		public void Scale(Vector3 scale) {
+			this.x *= scale.x;
+			this.y *= scale.y;
+			this.z *= scale.z;
+		}
         public void Scale(Vector3d scale) {
             this.x *= scale.x;
             this.y *= scale.y;
             this.z *= scale.z;
         }
+		public void InverseScale(Vector3 scale){
+			this.x /= scale.x;
+			this.y /= scale.y;
+			this.z /= scale.z;
+		}
+		public void InverseScale(Vector3d scale){
+			this.x /= scale.x;
+			this.y /= scale.y;
+			this.z /= scale.z;
+		}
 
         public static Vector3d Cross(Vector3d lhs, Vector3d rhs) {
             return new Vector3d(lhs.y * rhs.z - lhs.z * rhs.y, lhs.z * rhs.x - lhs.x * rhs.z, lhs.x * rhs.y - lhs.y * rhs.x);
