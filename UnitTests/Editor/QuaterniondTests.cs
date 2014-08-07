@@ -8,14 +8,14 @@ namespace UnityTest {
 
 
 	[TestFixture]
-	[Category ("Sample Tests")]
-	public class QuaterniondTests
+	[Category ("Quaternion")]
+	public class QuaterniondTests : TestsCommon
 	{
 		//	This is literally 1/2^23. Multiply it by the value and that's
 		//	pretty close to the precision. Rounding errors, of course, 
 		//	may jitter it in any number of ways. And if the calculation
 		//	involves multiple instances of rounding? The jitter may be bigger.
-		const double floatPrecision = 1.19209289550781E-07;
+
 //		const double defaultToleranceFactor = 1.19209289550781E-07;
 
 		const int numberOfTestItems = 12;
@@ -123,54 +123,9 @@ namespace UnityTest {
 			}
 		}
 
-		Quaternion GenerateRandomQuaternion(System.Random rand){
-			Quaternion q = new Quaternion();
-			for(int i=0; i<4; ++i){
-				q[i] = (float)(2.0 * rand.NextDouble() - 1.0);	//	I want a range of negative and positive values.
-			}
-			Normalize (ref q);	//	Not sure if this will actually be valid or not. If it produces errors, it'll be funny at least.
-			return q;
-		}
-		Vector3 GenerateRandomVector3(System.Random rand){
-			Vector3 v3 = new Vector3();
-			for(int i=0; i<3; ++i){
-				//	I want a range of negative and positive values, with a hilariously large range of magnitudes.
-				v3[i] = (float)(1000.0 * (0.1 + rand.NextDouble()) * (2.0 * rand.NextDouble() - 1.0));	
-			}
-			return v3;
-		}
 
-		void Normalize(ref Quaternion q){
-			float sum = 0;
-			for(int i=0; i<4; ++i){
-				sum += q[i] * q[i];
-			}
-			float inverseMagnitude = 1f / Mathf.Sqrt(sum);
-			for(int i=0; i<4; ++i){
-				q[i] *= inverseMagnitude;
-			}
-		}
 
-		bool IsNormalized(Quaternion q, double tolerance){
-			return Math.Abs(1d - GetSumOfSquares(q)) < tolerance;
-		}
-		bool IsNormalized(Quaterniond q, double tolerance){
-			return Math.Abs(1d - GetSumOfSquares(q)) < tolerance;
-		}
-		double GetSumOfSquares(Quaternion q){
-			double sum = 0;
-			for(int i=0; i<4; ++i){
-				sum += ((double)q[i]) * q[i];
-			}
-			return sum;
-		}
-		double GetSumOfSquares(Quaterniond q){
-			double sum = 0;
-			for(int i=0; i<4; ++i){
-				sum += q[i] * q[i];
-			}
-			return sum;
-		}
+
 		
 		[Test(Description = "eulerAngles")]
 		[Category ("eulerAngles")]
@@ -266,8 +221,7 @@ namespace UnityTest {
 			}
 		}
 
-		[Test(Description = "eulerAngles")]
-		[Category ("eulerAngles")]
+//		[Test(Description = "eulerAngles")]
 		public void FindBestEulerMatch (
 			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
 			){
@@ -280,7 +234,6 @@ namespace UnityTest {
 
 			List<EulerMatch> allAttempts = new List<EulerMatch>();
 
-			int[] tuple = new int[4];
 			for(int i=0; i<24*2*6; ++i){
 				EulerMatch match = new EulerMatch(i, (i / 24) % 2 == 0, i / 48);
 				match.EvaluateAngles(set.dq0);
@@ -425,15 +378,7 @@ namespace UnityTest {
 			AssertSimilar(set.dv1.normalized, (qd * set.dv0).normalized, 4d);
 		}
 
-		Quaterniond Negative(Quaterniond q){
-			return new Quaterniond(-q.x, -q.y, -q.z, -q.w);
-		}
-		Quaterniond Subtract(Quaternion a, Quaterniond b){
-			return new Quaterniond(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w);
-		}
-		Quaterniond Subtract(Quaterniond a, Quaterniond b){
-			return new Quaterniond(a.x-b.x, a.y-b.y, a.z-b.z, a.w-b.w);
-		}
+
 
 
 		[Test(Description = "SetLookRotation")]
@@ -829,144 +774,12 @@ namespace UnityTest {
 		//	Utility functions used for tests
 		//	********************************
 
-		void AssertSimilar(float f, double d){
-			AssertSimilar(f, d, "Values");
-		}
-
-		void AssertSimilar(float f, double d, double toleranceBasedOn){
-			AssertSimilar(f, d, "Values", toleranceBasedOn);
-		}
-		void AssertSimilar(float f, double d, String valueName){
-			AssertSimilar(f, d, valueName, 1d);
-		}
-		void AssertSimilar(double f, double d, string valueName, double toleranceBasedOn){
-			double difference = Mathd.Abs(d - f);
-			double tolerance = Mathd.Abs(toleranceBasedOn * floatPrecision);
-			string debugString = "f=" + f + ", \td=" + d + "\n\t"
-				+ "diff=" + difference + ", \ttolerance=" + tolerance + "\n\t"
-					+ "factors= " + (tolerance == 0.0d ? "&#x221E" : (difference / tolerance).ToString())
-					+ " \t/\t " + (difference == 0.0d ? "&#x221E" : (tolerance / difference).ToString());
-			if(difference > tolerance){
-				Assert.Fail(valueName + " outside of tolerance\n\t" + debugString, f, d);
-			} else {
-//				if(difference != 0){
-//					double passFactor = Mathd.Min ((tolerance / floatPrecision), (tolerance / difference));
-//					if(passFactor >= 10.0d){
-//						Debug.Log (valueName + " inside of tolerance (" + debugString + ")");
-//					}
-//				}
-//				Assert.Pass(valueName + " inside of tolerance", f, d);
-			}
-		}
-
-		void AssertSimilar(Vector3 f, Vector3 d){
-			AssertSimilar(f, d, 1);
-		}
-		void AssertSimilar(Quaternion f, Quaternion d){
-			AssertSimilar(f, d, 1);
-		}
-		void AssertSimilar(Vector3 f, Vector3d d){
-			AssertSimilar(f, d, 1);
-		}
-		void AssertSimilar(Quaternion f, Quaterniond d){
-			AssertSimilar(f, d, 1);
-		}
-		void AssertSimilar(Vector3d f, Vector3d d){
-			AssertSimilar(f, d, 1);
-		}
-		void AssertSimilar(Quaterniond f, Quaterniond d){
-			AssertSimilar(f, d, 1);
-		}
-
-		void AssertSimilar(Vector3 f, Vector3 d, double toleranceBasedOn){
-			AssertSimilar(f, d, toleranceBasedOn, "");
-		}
-		void AssertSimilar(Quaternion f, Quaternion d, double toleranceBasedOn){
-			AssertSimilar(f, d, toleranceBasedOn, "");
-		}
-		void AssertSimilar(Vector3 f, Vector3d d, double toleranceBasedOn){
-			AssertSimilar(f, d, toleranceBasedOn, "");
-		}
-		void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn){
-			AssertSimilar(f, d, toleranceBasedOn, "");
-		}
-		void AssertSimilar(Vector3d f, Vector3d d, double toleranceBasedOn){
-			AssertSimilar(f, d, toleranceBasedOn, "");
-		}
-		void AssertSimilar(Quaterniond f, Quaterniond d, double toleranceBasedOn){
-			AssertSimilar(f, d, toleranceBasedOn, "");
-		}
-
-		void AssertSimilar(Vector3 f, Vector3 d, string additionalInfo){
-			AssertSimilar(f, d, 1d, additionalInfo);
-		}
-		void AssertSimilar(Quaternion f, Quaternion d, string additionalInfo){
-			AssertSimilar(f, d, 1d, additionalInfo);
-		}
-		void AssertSimilar(Vector3 f, Vector3d d, string additionalInfo){
-			AssertSimilar(f, d, 1d, additionalInfo);
-		}
-		void AssertSimilar(Quaternion f, Quaterniond d, string additionalInfo){
-			AssertSimilar(f, d, 1d, additionalInfo);
-		}
-		void AssertSimilar(Vector3d f, Vector3d d, string additionalInfo){
-			AssertSimilar(f, d, 1d, additionalInfo);
-		}
-		void AssertSimilar(Quaterniond f, Quaterniond d, string additionalInfo){
-			AssertSimilar(f, d, 1d, additionalInfo);
-		}
-
-		void AssertSimilar(Vector3 f, Vector3 d, double toleranceBasedOn, string additionalInfo){
-//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-			AssertSimilar(new Vector3d(f), new Vector3d(d), toleranceBasedOn, additionalInfo);
-		}
-		void AssertSimilar(Quaternion f, Quaternion d, double toleranceBasedOn, string additionalInfo){
-//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-//			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
-			AssertSimilar(new Quaterniond(f), new Quaterniond(d), toleranceBasedOn, additionalInfo);
-		}
-
-		void AssertSimilar(Vector3 f, Vector3d d, double toleranceBasedOn, string additionalInfo){
-//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-			AssertSimilar(new Vector3d(f), d, toleranceBasedOn, additionalInfo);
-		}
-		void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn, string additionalInfo){
-//			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-//			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-//			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-//			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-//			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
+		protected override void AssertSimilar(Quaternion f, Quaterniond d, double toleranceBasedOn, string additionalInfo){
 //			AddCombo(f, d, false);
 			AssertSimilar(new Quaterniond(f), d, toleranceBasedOn, additionalInfo);
 //			AddCombo(f, d, true);
 		}
 
-		void AssertSimilar(Vector3d f, Vector3d d, double toleranceBasedOn, string additionalInfo){
-			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-		}
-		void AssertSimilar(Quaterniond f, Quaterniond d, double toleranceBasedOn, string additionalInfo){
-			string inputs = (additionalInfo.Length > 1 ? additionalInfo + "\n" : "") + "f: " + f.ToString("G5") + "  d: " + d.ToString("G5") + "\n";
-			Quaterniond dneg = Negative(d);
-			if(GetSumOfSquares(Subtract(f, d)) > GetSumOfSquares(Subtract(f, dneg))){
-				d = dneg;
-			}
-			AssertSimilar (f.x, d.x, inputs + "x", toleranceBasedOn);
-			AssertSimilar (f.y, d.y, inputs + "y", toleranceBasedOn);
-			AssertSimilar (f.z, d.z, inputs + "z", toleranceBasedOn);
-			AssertSimilar (f.w, d.w, inputs + "w", toleranceBasedOn);
-		}
 
 		int numComboEntries = 0;
 		int numMatchingPattern = 0;

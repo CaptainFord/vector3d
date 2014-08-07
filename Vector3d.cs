@@ -337,8 +337,11 @@ namespace UnityEngine {
         }
 
         public static Vector3d Normalize(Vector3d value) {
+			if(value.IsZero){
+				return value;
+			}
             double num = Vector3d.Magnitude(value);
-            if (num > 9.99999974737875E-06) {
+            if (num > 9.99999974737875E-06) {	//	 TODO I don't like this. Using an absolute value here is a TERRIBLE IDEA when you don't know what the scale is.
                 return value / num;
 			} else {
                 return Vector3d.zero;
@@ -425,5 +428,10 @@ namespace UnityEngine {
 			return new Vector3d(Mathd.Max(this.x, rhs.x), Mathd.Max(this.y, rhs.y), Mathd.Max(this.z, rhs.z));
 		}
         
+		public bool IsZero {
+			get {
+				return x == 0d && y == 0d && z == 0d;
+			}
+		}
     }
 }

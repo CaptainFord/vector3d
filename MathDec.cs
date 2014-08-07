@@ -44,9 +44,23 @@ namespace UnityEngine {
         public static decimal Atan2(decimal y, decimal x) {
 			return (decimal)Math.Atan2((double)y, (double)x);
         }
-
+		public static decimal Sqrt(decimal d, decimal epsilon){
+			if (d < 0m) throw new OverflowException("Cannot calculate square root from a negative number");
+			
+			decimal current = (decimal)Math.Sqrt((double)d);
+			decimal previous;
+			do
+			{
+				previous = current;
+				if (previous == 0.0M) return 0;
+				current = (previous + d / previous) / 2;
+			}
+			while (Math.Abs(previous - current) > epsilon);
+			return current;
+		}
         public static decimal Sqrt(decimal d) {
-			return (decimal)Math.Sqrt((double)d);
+			return Sqrt (d, Epsilon);
+//			return (decimal)Math.Sqrt((double)d);
         }
 
         public static decimal Abs(decimal d) {
@@ -154,15 +168,15 @@ namespace UnityEngine {
         }
 
         public static decimal Ceil(decimal d) {
-			return (decimal)Math.Ceiling(d);
+			return Math.Ceiling(d);
         }
 
         public static decimal Floor(decimal d) {
-			return (decimal)Math.Floor(d);
+			return Math.Floor(d);
         }
 
         public static decimal Round(decimal d) {
-			return (decimal)Math.Round(d);
+			return Math.Round(d);
         }
 
         public static int CeilToInt(decimal d) {

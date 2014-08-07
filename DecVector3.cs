@@ -122,12 +122,22 @@ namespace UnityEngine {
             this.y = (decimal)y;
             this.z = (decimal)z;
         }
+		public DecVector3(double x, double y, double z) {
+			this.x = (decimal)x;
+			this.y = (decimal)y;
+			this.z = (decimal)z;
+		}
 
         public DecVector3(Vector3 v3) {
             this.x = (decimal)v3.x;
             this.y = (decimal)v3.y;
             this.z = (decimal)v3.z;
         }
+		public DecVector3(Vector3d v3) {
+			this.x = (decimal)v3.x;
+			this.y = (decimal)v3.y;
+			this.z = (decimal)v3.z;
+		}
 
         public DecVector3(decimal x, decimal y) {
             this.x = x;

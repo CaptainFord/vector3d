@@ -775,12 +775,12 @@ namespace UnityEngine {
 			double xx = x*x*2;
 			double xy = x*y*2;
 			double xz = x*z*2;
-			double xw = x*z*2;
+			double xw = x*w*2;
 			double yy = y*y*2;
 			double yz = y*z*2;
-			double yw = y*z*2;
+			double yw = y*w*2;
 			double zz = z*z*2;
-			double zw = z*z*2;
+			double zw = z*w*2;
 			return new Vector3d(
 				//	ABij = A
 				rhs.x * (1 - yy - zz) 	+ rhs.y * (xy - zw) 	+ rhs.z * (xz + yw),
@@ -795,12 +795,12 @@ namespace UnityEngine {
 			double xx = x*x*2;
 			double xy = x*y*2;
 			double xz = x*z*2;
-			double xw = -x*z*2;
+			double xw = -x*w*2;
 			double yy = y*y*2;
 			double yz = y*z*2;
-			double yw = -y*z*2;
+			double yw = -y*w*2;
 			double zz = z*z*2;
-			double zw = -z*z*2;
+			double zw = -z*w*2;
 			return new Vector3d(
 				//	ABij = A
 				rhs.x * (1 - yy - zz) 	+ rhs.y * (xy - zw) 	+ rhs.z * (xz + yw),
