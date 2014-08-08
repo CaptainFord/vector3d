@@ -9,8 +9,15 @@ namespace UnityTest {
 	[Category ("Bounds")]
 	public class BoundsdTests : TestsCommon
 	{
-		const int numberOfTestItems = 12;
+		const int numberOfTestItems = 30;
 		const int expandedNumberOfTestItems = 60;
+		const bool prenormalizeExtents = false;
+		const bool useExtremeValuesInBoundsCenter = false;
+		const bool useExtremeValuesInBoundsExtents = false;
+		const bool useExtremeValuesInPoints = false;
+		const bool useExtremeValuesInRayOrigins = false;
+		const bool useExtremeValuesInRayDirections = false;
+		const bool useExtremeValuesInRawValues = false;
 		
 		TestItemSet[] testItemSets;
 		
@@ -49,12 +56,52 @@ namespace UnityTest {
 		public BoundsdTests ()
 		{
 			System.Random rand = new System.Random("there's a rhinoceros in my soup".GetHashCode());
+			AlterRollProfiles();
 			//			rand = new System.Random();
-			testItemSets = new TestItemSet[expandedNumberOfTestItems];
-			for(int i=0; i<expandedNumberOfTestItems; ++i){
+			int length = Math.Max (expandedNumberOfTestItems, numberOfTestItems);
+			testItemSets = new TestItemSet[length];
+			for(int i=0; i<length; ++i){
 				testItemSets[i] = GenerateTestItemSet(i, rand);
 			}
 			Boundsd.scratchGrounds();
+		}
+
+		void AlterRollProfiles ()
+		{
+			SetExtremeValues(boundsCenterRoller, useExtremeValuesInBoundsCenter);
+			SetExtremeValues(boundsExtentsRoller, useExtremeValuesInBoundsExtents);
+			SetExtremeValues(worldCoordinateRoller, useExtremeValuesInPoints);
+			SetExtremeValues(rayOriginRoller, useExtremeValuesInRayOrigins);
+			SetExtremeValues(rayDirectionRoller, useExtremeValuesInRayDirections);
+			SetExtremeValues(valueRoller, useExtremeValuesInRawValues);
+
+
+//			boundsExtentsRoller.positiveInfinityChance = 0f;
+//			boundsExtentsRoller.nanChance = 0f;
+		}
+
+		void SetExtremeValues (NumberRollProfile roller, bool active)
+		{
+			//	So far I've verified that unity does indeed allow NaN and infinity values in its bounds
+			//	Not that I'm suprised. But I still don't know why they're properties and not fields.
+			if(active){
+				roller.extremeValueChance = 0.1f;
+				roller.nanChance = 1f;
+				roller.negativeInfinityChance = 1f;
+				roller.positiveInfinityChance = 1f;
+				//	Including min and max values is meaningless in tests that compare the behavior
+				//	float and double implementations, because the doubles simply won't exhibit the 
+				//	same behavior since they won't overflow.
+				//	It would be valid if and only if the double version was ALSO set to max or min value.
+				//	...	 that's not hard to implement.
+
+				roller.minValueChance = 0f;	
+				roller.maxValueChance = 0f;
+				roller.negativeMinValueChance = 0f;	
+				roller.negativeMaxValueChance = 0f;
+			} else {
+				roller.extremeValueChance = 0f;
+			}
 		}
 		
 		TestItemSet GenerateTestItemSet(int index, System.Random rand){
@@ -66,7 +113,7 @@ namespace UnityTest {
 			set.f0 = (float)rand.NextDouble();
 			set.fb0 = GenerateRandomBounds(rand);
 			set.fb1 = GenerateRandomBounds(rand);
-			set.fray = new Ray(GenerateRandomVector3(rand), GenerateRandomVector3(rand));
+			set.fray = GenerateRandomRay(rand);
 
 			set.dq0 = new Quaterniond(set.fq0);
 			set.dq1 = new Quaterniond(set.fq1);
@@ -79,8 +126,74 @@ namespace UnityTest {
 			
 			set.seed = rand.Next();
 			//			TestNormalizationOfSet(set);
+
+			MatchExtremeValues(ref set);
+
+			if(prenormalizeExtents){
+				NormalizeExtents(ref set.fb0, ref set.db0);
+				NormalizeExtents(ref set.fb1, ref set.db1);
+			}
 			return set;
 		}
+
+		void MatchExtremeValues(ref TestItemSet set){
+			MatchExtremeValues(set.fb0, ref set.db0);
+			MatchExtremeValues(set.fb1, ref set.db1);
+			MatchExtremeValues(set.fv0, ref set.dv0);
+			MatchExtremeValues(set.fv1, ref set.dv1);
+			MatchExtremeValues(set.fq0, ref set.dq0);
+			MatchExtremeValues(set.fq1, ref set.dq1);
+			MatchExtremeValues(set.fray, ref set.dray);
+			MatchExtremeValues(set.f0, ref set.d0);
+		}
+
+		void MatchExtremeValues(Bounds fb, ref Boundsd db){
+			db.center = MatchExtremeValues(fb.center, db.center);
+			db.extents = MatchExtremeValues(fb.extents, db.extents);
+		}
+		void MatchExtremeValues(Vector3 fv, ref Vector3d dv){
+			MatchExtremeValues(fv.x, ref dv.x);
+			MatchExtremeValues(fv.y, ref dv.y);
+			MatchExtremeValues(fv.z, ref dv.z);
+		}
+		void MatchExtremeValues(Quaternion fv, ref Quaterniond dv){
+			MatchExtremeValues(fv.x, ref dv.x);
+		}
+		void MatchExtremeValues(Ray fv, ref Rayd dv){
+			dv.origin = MatchExtremeValues(fv.origin, dv.origin);
+			dv.direction = MatchExtremeValues(fv.direction, dv.direction);
+		}
+		Vector3d MatchExtremeValues(Vector3 fv, Vector3d dv){
+			MatchExtremeValues(fv.x, ref dv.x);
+			MatchExtremeValues(fv.y, ref dv.y);
+			MatchExtremeValues(fv.z, ref dv.z);
+			return dv;
+		}
+
+		void MatchExtremeValues(float f, ref double d){
+			if(f == float.MinValue){
+				d = double.MinValue;
+			} else if(f == -float.MinValue){
+				d = -double.MinValue;
+			} else if(f == float.MaxValue){
+				d = double.MaxValue;
+			} else if(f == -float.MaxValue){
+				d = -double.MaxValue;
+			}
+		}
+		double MatchExtremeValues(float f, double d){
+			if(f == float.MinValue){
+				return double.MinValue;
+			} else if(f == -float.MinValue){
+				return -double.MinValue;
+			} else if(f == float.MaxValue){
+				return double.MaxValue;
+			} else if(f == -float.MaxValue){
+				return -double.MaxValue;
+			}
+			return d;
+		}
+
 
 
 		
@@ -233,7 +346,7 @@ namespace UnityTest {
 			//	every time, not pass 10 out of 12 times. So it must be calculating the difference
 			//	and comparing it to the extents.
 			System.Random rand = set.rand;
-			Assert.AreEqual (set.fb0.Contains(set.fb0.center), set.db0.Contains(set.db0.center), "Contains(center)");
+			AssertContains (set.fb0.Contains(set.fb0.center), set.db0, set.db0.center, "set.db0.center");
 //			Assert.AreEqual (set.fb0.Contains(set.fb0.min), set.db0.Contains(set.db0.min), "Contains(min)");
 //			Assert.AreEqual (set.fb0.Contains(set.fb0.max), set.db0.Contains(set.db0.max), "Contains(max)");
 //			Assert.True (set.fb0.Contains(set.fb0.center));
@@ -330,6 +443,9 @@ namespace UnityTest {
 			db.Encapsulate(set.dv0);
 
 			AssertSimilar(fb, db, Mathd.Max (ToleranceBasisOf(db), ToleranceBasisOf(set.db0)), inputs);
+			if(ContainsPositiveInfinity(set.fv0)){
+				Debug.Log ("TestEncapsulatePoint(" + testIndex + "): " + inputs + "\n= " + fb + "\n" + "= " + db);
+			}
 		}
 
 		[Test]
@@ -348,6 +464,7 @@ namespace UnityTest {
 			db.Encapsulate(set.db1);
 
 			AssertSimilar(fb, db, Mathd.Max (ToleranceBasisOf(db), ToleranceBasisOf(set.db0)), inputs);
+//			Debug.Log ("TestEncapsulateBounds(" + testIndex + "):" + inputs + "\n= " + fb + "\n" + "= " + db);
 		}
 
 		[Test]
@@ -428,13 +545,23 @@ namespace UnityTest {
 			Bounds fb = set.fb0;
 			Boundsd db = set.db0;
 
+//			TestIntersectRayTwoArg(fb, db, set.fray, 0);
+//			TestIntersectRayTwoArg(fb, db, new Ray(fb.min + fb.size * 0.1f, fb.max - fb.min), 0);
+//			TestIntersectRayTwoArg(fb, db, new Ray(fb.max + fb.size, fb.max - fb.min), 0);
+
 			NormalizeExtents(ref fb, ref db);
 
-			TestIntersectRayTwoArg(fb, db, set.fray, set.dray, 0);
-			TestIntersectRayTwoArg(fb, db, new Ray(fb.min + fb.size * 0.1f, fb.max - fb.min), new Rayd(db.min + db.size * 0.1d, db.max - db.min), 1);
-			TestIntersectRayTwoArg(fb, db, new Ray(fb.max + fb.size, fb.max - fb.min), new Rayd(db.max + db.size, db.max - db.min), -1);
+//			TestIntersectRayTwoArg(fb, db, set.fray, set.dray, 0);
+//			TestIntersectRayTwoArg(fb, db, new Ray(fb.min + fb.size * 0.1f, fb.max - fb.min), new Rayd(db.min + db.size * 0.1d, db.max - db.min), 1);
+//			TestIntersectRayTwoArg(fb, db, new Ray(fb.max + fb.size, fb.max - fb.min), new Rayd(db.max + db.size, db.max - db.min), -1);
+			
+			TestIntersectRayTwoArg(fb, db, set.fray, 0);
+			TestIntersectRayTwoArg(fb, db, new Ray(fb.min + fb.size * 0.1f, fb.max - fb.min), 1);
+			TestIntersectRayTwoArg(fb, db, new Ray(fb.max + fb.size, fb.max - fb.min), -1);
 		}
-
+		void TestIntersectRayTwoArg (Bounds fb, Boundsd db, Ray fray, int knownResult){
+			TestIntersectRayTwoArg(fb, db, fray, new Rayd(fray), knownResult);
+		}
 		void TestIntersectRayTwoArg (Bounds fb, Boundsd db, Ray fray, Rayd dray, int knownResult)
 		{
 			string inputs = "Bounds: " + StrMultiline(db,2) + "\nRay: " + Str (dray) + "\nknownResult=" + knownResult;
@@ -450,9 +577,9 @@ namespace UnityTest {
 				"\nPoints: " + fpoint.ToString("G5") + ", " + dpoint.ToString("G5") +
 				"\nBools: " + fbool + ", " + dbool;
 
-//			Debug.Log ("Tolerance Basic(" + f + "," + d +")= " + toleranceBasis);
-			AssertSimilar(f, d, inputs + "\ndistance", 50d * ToleranceBasisOf(f, d));
+			//			Debug.Log ("Tolerance Basic(" + f + "," + d +")= " + toleranceBasis);
 			AssertSimilar(fpoint, dpoint, 4*ToleranceBasisOf(fpoint, dpoint), inputs + "\npoints");
+			AssertSimilar(f, d, inputs + "\ndistance", 4d * ToleranceBasisOf(f, d));
 
 			if(knownResult == 1){
 				Assert.True(fbool,"[ALERT:]\n" + inputs + "\nFailed to intersect!");
@@ -474,8 +601,23 @@ namespace UnityTest {
 			intersections += IntersectionTest(set.fb0, set.db0, set.fb1, set.db1);
 		}
 
+
 		int IntersectionTest (Bounds fb0, Boundsd db0, Bounds fb1, Boundsd db1)
 		{
+			WeakIntersectionTest(fb0,db0,fb1,db1);
+			
+			//	After normalization
+			NormalizeExtents(ref fb0, ref db0);
+			NormalizeExtents(ref fb1, ref db1);
+
+			if(ContainsNaN(fb0,fb1)){
+				WeakIntersectionTest(fb0,db0,fb1,db1);
+			} else {
+				StrongIntersectionTest(fb0,db0,fb1,db1);
+			}
+			return db0.Intersects(db1) ? 1 : 0;
+		}
+		void WeakIntersectionTest(Bounds fb0, Boundsd db0, Bounds fb1, Boundsd db1){
 			string input0 =  StrMultiline(db0, 2);
 			string input1 =  StrMultiline(db1, 2);
 			string inputs = "Bounds 0: " + input0 + "\nBounds 1: " + input1;
@@ -483,11 +625,12 @@ namespace UnityTest {
 			Assert.AreEqual(fb1.Intersects(fb1), db1.Intersects(db1), "Bounds: " + input1);
 			Assert.AreEqual(fb0.Intersects(fb1), db0.Intersects(db1), inputs);
 			Assert.AreEqual(fb1.Intersects(fb0), db1.Intersects(db0), "[ALERT:INVERSE OF PASSED OPERATION]\n" + inputs);
-			
-			//	After normalization
-			NormalizeExtents(ref fb0, ref db0);
-			NormalizeExtents(ref fb1, ref db1);
-			
+		}
+		void StrongIntersectionTest(Bounds fb0, Boundsd db0, Bounds fb1, Boundsd db1){
+			string input0 =  StrMultiline(db0, 2);
+			string input1 =  StrMultiline(db1, 2);
+			string inputs = "Bounds 0: " + input0 + "\nBounds 1: " + input1;
+
 			Assert.True (fb0.Intersects(fb0), "[ALERT]Bounds: " + input0);
 			Assert.True (db0.Intersects(db0), "Bounds: " + input0);
 			Assert.True (fb1.Intersects(fb1), "[ALERT]Bounds: " + input1);
@@ -495,7 +638,6 @@ namespace UnityTest {
 			
 			Assert.AreEqual(fb0.Intersects(fb1), db0.Intersects(db1), inputs);
 			Assert.AreEqual(fb1.Intersects(fb0), db1.Intersects(db0), "[ALERT:INVERSE OF PASSED OPERATION]\n" + inputs);
-			return db0.Intersects(db1) ? 1 : 0;
 		}
 
 		[Test]
@@ -530,6 +672,7 @@ namespace UnityTest {
 			
 			AssertSimilar (fb, db, ToleranceBasisOf(db));
 		}
+
 		[Test]
 		public void TestSqrDistance (
 			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
@@ -539,13 +682,54 @@ namespace UnityTest {
 			Bounds fb = set.fb0;
 			Boundsd db = set.db0;
 
+			Vector3d diff, nonNaiveDiff;
+
 			float f = fb.SqrDistance(set.fv0);
-			double d = db.SqrDistance(set.dv0);
+			double d = db.SqrDistance(set.dv0, out diff);
+			double nonNaive = db.SqrDistanceNotNaively(set.dv0, out nonNaiveDiff);
+
 
 			string inputs = "Bounds: " + StrMultiline(set.db0, 2) + "\nPoint: " + Str (set.dv0);
-			
-			AssertSimilar (f, d, inputs + "\nsqrDistance", Math.Min (2d*f, 2d*d));
+
+			inputs += "\nDiff: " + diff + " = " + diff.sqrMagnitude + " => " + diff.magnitude;
+			inputs += "\nF Result: " + f + " => " + Mathf.Sqrt(f);
+			double tolerance = 2 * Math.Min (Math.Abs(f), Math.Abs(d)) ;
+			if(Math.Abs (f - d) >= tolerance * floatPrecision){
+				inputs += seekOutDiffMatch(f, diff, nonNaiveDiff);
+			}
+			AssertSimilar (f, d, inputs + "\nsqrDistance", tolerance);
+			Debug.Log ("TestSqrDistance(" + testIndex + "): \n" + inputs);
 		}
+
+		string seekOutDiffMatch (float f, Vector3d diff, Vector3d nonNaiveDiff)
+		{
+			StringBuilder b = new StringBuilder();
+//			AppendDiffMatch(b, f, diff.x, diff.y, diff.z);
+//			AppendDiffMatch(b, f, 0, diff.y, diff.z);
+//			AppendDiffMatch(b, f, diff.x, 0, diff.z);
+//			AppendDiffMatch(b, f, diff.x, diff.y, 0);
+//			AppendDiffMatch(b, f, nonNaiveDiff.x, diff.y, diff.z);
+//			AppendDiffMatch(b, f, diff.x, nonNaiveDiff.y, diff.z);
+//			AppendDiffMatch(b, f, diff.x, diff.y, nonNaiveDiff.z);
+
+			
+			AppendDiffMatch(b, f, Mathd.Sqrt(f - diff.y * diff.y - diff.z * diff.z), diff.y, diff.z);
+			AppendDiffMatch(b, f, diff.x, Mathd.Sqrt(f - diff.x * diff.x - diff.z * diff.z), diff.z);
+			AppendDiffMatch(b, f, diff.x, diff.y, Mathd.Sqrt(f - diff.y * diff.y - diff.x * diff.x));
+//			AppendDiffMatch(b, f, diff.x, diff.y, diff.z);
+
+			return b.ToString ();
+		}
+
+		void AppendDiffMatch (StringBuilder b, float f, double x, double y, double z)
+		{
+			Vector3d diff = new Vector3d(x,y,z);
+			double d = diff.sqrMagnitude;
+			double tolerance = 2 * Math.Min (Math.Abs(f), Math.Abs(d)) * floatPrecision;
+
+			b.Append("\n").Append (diff).Append(" => ").Append(d).Append(" => ").Append(Mathd.Abs(f - d) / tolerance);
+		}
+
 	}
 }
 

@@ -22,8 +22,98 @@ namespace UnityTest
 		public const string fullBoundsFormatOneLine = "{center}\u00B1{extents}|{min}to{max}";
 		public const string fullBoundsFormat = "{center}\u00B1{extents}\n{min}to{max}";
 
+		public NumberRollProfile worldCoordinateRoller, valueRoller, quaternionRoller, 
+				eulerRoller, boundsCenterRoller, boundsExtentsRoller,
+				rayOriginRoller, rayDirectionRoller;
 
 		public TestsCommon ()
+		{
+			TestConstants();
+			InitializeRollProfiles();
+		}
+
+		void InitializeRollProfiles ()
+		{
+			valueRoller = new NumberRollProfile();
+			worldCoordinateRoller = new NumberRollProfile(Rolls.mult(Rolls.r(10,1100),Rolls.r(-1,1)));
+			quaternionRoller = new NumberRollProfile(-1f, 1f);
+			eulerRoller = new NumberRollProfile(Rolls.r (0f, 360f))
+				.AddOverride(0, new NumberRollProfile(Rolls.a(Rolls.r(0,90),Rolls.s(0, 270))));
+			boundsCenterRoller = worldCoordinateRoller.Clone();
+			boundsExtentsRoller = new NumberRollProfile(Rolls.mult(Rolls.r(10,1100),Rolls.r(-1,1)));
+			rayOriginRoller = worldCoordinateRoller.Clone();
+			rayDirectionRoller = new NumberRollProfile(-1f, 1f);
+		}
+
+		//	Object generation for test sets
+		public Quaternion GenerateRandomQuaternion(System.Random rand){
+			return GenerateRandomQuaternion(rand, quaternionRoller);
+		}
+		public Vector3 GenerateRandomVector3(System.Random rand){
+			return GenerateRandomVector3(rand, worldCoordinateRoller);
+		}
+		public Vector3 GenerateRandomEulerCoordinates(System.Random rand){
+			return GenerateRandomVector3(rand, eulerRoller);
+		}
+		public Bounds GenerateRandomBounds(System.Random rand){
+			return GenerateRandomBounds(rand, boundsCenterRoller, boundsExtentsRoller);
+		}
+		public Ray GenerateRandomRay(System.Random rand){
+			return GenerateRandomRay(rand, rayOriginRoller, rayDirectionRoller);
+		}
+
+		public static Quaternion GenerateRandomQuaternion(System.Random rand, NumberRollProfile roller){
+			Quaternion q = new Quaternion();
+			for(int i=0; i<4; ++i){
+				q[i] = roller.Roll(i, rand);
+			}
+			Normalize (ref q);
+			return q;
+		}
+		public static Vector3 GenerateRandomVector3(System.Random rand, NumberRollProfile roller){
+			Vector3 v3 = new Vector3();
+			for(int i=0; i<3; ++i){
+				//	I want a range of negative and positive values, with a hilariously large range of magnitudes.
+				v3[i] = roller.Roll(i, rand);
+			}
+			return v3;
+		}
+		
+		public static Bounds GenerateRandomBounds (System.Random rand, NumberRollProfile centerRoller, NumberRollProfile extentsRoller)
+		{
+			return new Bounds(GenerateRandomVector3(rand, centerRoller), GenerateRandomVector3(rand, extentsRoller));
+		}
+		public static Ray GenerateRandomRay(System.Random rand, NumberRollProfile originRoller, NumberRollProfile directionRoller)
+		{
+			return new Ray(GenerateRandomVector3(rand, originRoller), MiscUtil.RollRandomPointOnSphereF(rand));
+		}
+
+		//	Old versions. Don't want to lose them until I'm sure I don't need them.
+		public static Quaternion GenerateRandomQuaternionOld(System.Random rand){
+			Quaternion q = new Quaternion();
+			for(int i=0; i<4; ++i){
+				q[i] = (float)(2.0 * rand.NextDouble() - 1.0);	//	I want a range of negative and positive values.
+			}
+			Normalize (ref q);	//	Not sure if this will actually be valid or not. If it produces errors, it'll be funny at least.
+			return q;
+		}
+		public static Vector3 GenerateRandomVector3Old(System.Random rand){
+			Vector3 v3 = new Vector3();
+			for(int i=0; i<3; ++i){
+				//	I want a range of negative and positive values, with a hilariously large range of magnitudes.
+				v3[i] = (float)(1000.0 * (0.1 + rand.NextDouble()) * (2.0 * rand.NextDouble() - 1.0));	
+			}
+			return v3;
+		}
+		
+		public static Bounds GenerateRandomBoundsOld (System.Random rand)
+		{
+			return new Bounds(GenerateRandomVector3Old(rand), GenerateRandomVector3Old(rand));
+		}
+
+
+
+		void TestConstants ()
 		{
 			TestConstEqual("floatBumpUp", floatBumpUp, 1f + floatPrecisionF);
 			TestConstEqual("floatBumpDown", floatBumpDown, 1f - 0.5f * floatPrecisionF);
@@ -58,18 +148,25 @@ namespace UnityTest
 			AssertSimilar(f, d, valueName, 1d);
 		}
 		protected virtual void AssertSimilar(double f, double d, string valueName, double toleranceBasedOn){
-			double difference = Mathd.Abs(d - f);
-			double tolerance = Mathd.Abs(toleranceBasedOn * floatPrecision);
-			if(difference > tolerance){
-				OnAssertSimilarFailure(f, d, valueName, toleranceBasedOn, difference, tolerance);
+			if(double.IsNaN(f) || double.IsNaN(f) || double.IsInfinity(f) || double.IsInfinity(d)){
+				if(!f.Equals(d)){
+					OnAssertSimilarFailure(f, d, valueName, toleranceBasedOn, 0d, 0d);
+				}
 			} else {
-				//				if(difference != 0){
-				//					double passFactor = Mathd.Min ((tolerance / floatPrecision), (tolerance / difference));
-				//					if(passFactor >= 10.0d){
-				//						Debug.Log (valueName + " inside of tolerance (" + debugString + ")");
-				//					}
-				//				}
-				//				Assert.Pass(valueName + " inside of tolerance", f, d);
+
+				double difference = Mathd.Abs(d - f);
+				double tolerance = Mathd.Abs(toleranceBasedOn * floatPrecision);
+				if(difference > tolerance){
+					OnAssertSimilarFailure(f, d, valueName, toleranceBasedOn, difference, tolerance);
+				} else {
+					//				if(difference != 0){
+					//					double passFactor = Mathd.Min ((tolerance / floatPrecision), (tolerance / difference));
+					//					if(passFactor >= 10.0d){
+					//						Debug.Log (valueName + " inside of tolerance (" + debugString + ")");
+					//					}
+					//				}
+					//				Assert.Pass(valueName + " inside of tolerance", f, d);
+				}
 			}
 		}
 
@@ -228,7 +325,9 @@ namespace UnityTest
 		public static void Normalize(ref Quaternion q){
 			float sum = 0;
 			for(int i=0; i<4; ++i){
-				sum += q[i] * q[i];
+				if(!(float.IsNaN(q[i]) || float.IsInfinity(q[i]))){
+					sum += q[i] * q[i];
+				}
 			}
 			float inverseMagnitude = 1f / Mathf.Sqrt(sum);
 			for(int i=0; i<4; ++i){
@@ -257,28 +356,7 @@ namespace UnityTest
 			return sum;
 		}
 
-		public static Quaternion GenerateRandomQuaternion(System.Random rand){
-			Quaternion q = new Quaternion();
-			for(int i=0; i<4; ++i){
-				q[i] = (float)(2.0 * rand.NextDouble() - 1.0);	//	I want a range of negative and positive values.
-			}
-			Normalize (ref q);	//	Not sure if this will actually be valid or not. If it produces errors, it'll be funny at least.
-			return q;
-		}
-		public static Vector3 GenerateRandomVector3(System.Random rand){
-			Vector3 v3 = new Vector3();
-			for(int i=0; i<3; ++i){
-				//	I want a range of negative and positive values, with a hilariously large range of magnitudes.
-				v3[i] = (float)(1000.0 * (0.1 + rand.NextDouble()) * (2.0 * rand.NextDouble() - 1.0));	
-			}
-			return v3;
-		}
 
-		
-		public static Bounds GenerateRandomBounds (System.Random rand)
-		{
-			return new Bounds(GenerateRandomVector3(rand), GenerateRandomVector3(rand));
-		}
 
 
 		public static Vector3[] RollPointsWithinBounds (System.Random rand, Bounds bounds, int count, float extentRatio)
@@ -345,6 +423,11 @@ namespace UnityTest
 
 		public static float RollOutsideBoundsAxis (System.Random rand, float center, float extent)
 		{
+			if(float.IsInfinity(extent)){
+				//	Not possible to pick a location outside the bounds axis
+				//	Unless I go with NaN. I'm not sure that makes sense.
+				return center;
+			}
 			float roll = (float)(rand.NextDouble() * extent);
 
 			if(rand.Next() % 2 == 0){
@@ -510,6 +593,297 @@ namespace UnityTest
 		public static string StrMultiline(Boundsd b, int tabIndentsPerLine){
 			string newlineReplacement = "\n" + StringUtil.Repeat("\t", tabIndentsPerLine);
 			return b.ToString(fullBoundsFormat.Replace("\n", newlineReplacement), fullNumberFormat);
+		}
+
+		public static bool ContainsNaN(Bounds b){
+			return ContainsNaN(b.center) || ContainsNaN(b.extents);
+		}
+		public static bool ContainsNaN(Vector3 v){
+			return float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z);
+		}
+		public static bool ContainsNaN(Quaternion q){
+			return float.IsNaN(q.x) || float.IsNaN(q.y) || float.IsNaN(q.z) || float.IsNaN(q.w);
+		}
+		public static bool ContainsNaN(Ray r){
+			return ContainsNaN(r.origin) || ContainsNaN(r.direction);
+		}
+		public static bool ContainsNaN(Vector2 v){
+			return float.IsNaN(v.x) || float.IsNaN(v.y);
+		}
+		public static bool ContainsNaN(float f){
+			return float.IsNaN(f);
+		}
+		public static bool ContainsNaN(params float[] values){
+			foreach(float value in values){
+				if(float.IsNaN(value))
+					return true;
+			}
+			return false;
+		}
+
+		public static bool ContainsNaN(Boundsd b){
+			return ContainsNaN(b.center) || ContainsNaN(b.extents);
+		}
+		public static bool ContainsNaN(Vector3d v){
+			return double.IsNaN(v.x) || double.IsNaN(v.y) || double.IsNaN(v.z);
+		}
+		public static bool ContainsNaN(Quaterniond q){
+			return double.IsNaN(q.x) || double.IsNaN(q.y) || double.IsNaN(q.z) || double.IsNaN(q.w);
+		}
+		public static bool ContainsNaN(Rayd r){
+			return ContainsNaN(r.origin) || ContainsNaN(r.direction);
+		}
+		public static bool ContainsNaN(Vector2d v){
+			return double.IsNaN(v.x) || double.IsNaN(v.y);
+		}
+		public static bool ContainsNaN(double d){
+			return double.IsNaN(d);
+		}
+		public static bool ContainsNaN(params double[] values){
+			foreach(double value in values){
+				if(double.IsNaN(value))
+					return true;
+			}
+			return false;
+		}
+
+		public static bool ContainsNaN (object obj)
+		{
+			if(obj == null){
+				return false;
+			}
+			if(obj is Bounds){
+				return ContainsNaN((Bounds)obj);
+			} else if(obj is Vector3){
+				return ContainsNaN((Vector3)obj);
+			} else if(obj is Quaternion){
+				return ContainsNaN((Quaternion)obj);
+			} else if(obj is Ray){
+				return ContainsNaN((Ray)obj);
+			} else if(obj is Vector2){
+				return ContainsNaN((Vector2)obj);
+			} else if(obj is Single){
+				return ContainsNaN((float)obj);
+			}
+
+			if(obj is Boundsd){
+				return ContainsNaN((Boundsd)obj);
+			} else if(obj is Vector3d){
+				return ContainsNaN((Vector3d)obj);
+			} else if(obj is Quaterniond){
+				return ContainsNaN((Quaterniond)obj);
+			} else if(obj is Rayd){
+				return ContainsNaN((Rayd)obj);
+			} else if(obj is Vector2d){
+				return ContainsNaN((Vector2d)obj);
+			} else if(obj is Double){
+				return ContainsNaN((double)obj);
+			}
+
+			Debug.LogError("ContainsNaN couldn't resolve: Unknown object type: " + obj.GetType() + " (obj='" + obj + "')");
+			return false;
+		}
+		public static bool ContainsNaN (params object[] objects)
+		{
+			foreach(object obj in objects){
+				if(ContainsNaN(obj))
+					return true;
+			}
+			return false;
+		}
+
+		public static bool ContainsPositiveInfinity(Bounds b){
+			return ContainsPositiveInfinity(b.center) || ContainsPositiveInfinity(b.extents);
+		}
+		public static bool ContainsPositiveInfinity(Vector3 v){
+			return float.IsPositiveInfinity(v.x) || float.IsPositiveInfinity(v.y) || float.IsPositiveInfinity(v.z);
+		}
+		public static bool ContainsPositiveInfinity(Quaternion q){
+			return float.IsPositiveInfinity(q.x) || float.IsPositiveInfinity(q.y) || float.IsPositiveInfinity(q.z) || float.IsPositiveInfinity(q.w);
+		}
+		public static bool ContainsPositiveInfinity(Ray r){
+			return ContainsPositiveInfinity(r.origin) || ContainsPositiveInfinity(r.direction);
+		}
+		public static bool ContainsPositiveInfinity(Vector2 v){
+			return float.IsPositiveInfinity(v.x) || float.IsPositiveInfinity(v.y);
+		}
+		public static bool ContainsPositiveInfinity(float f){
+			return float.IsPositiveInfinity(f);
+		}
+		public static bool ContainsPositiveInfinity(params float[] values){
+			foreach(float value in values){
+				if(float.IsPositiveInfinity(value))
+					return true;
+			}
+			return false;
+		}
+		
+		public static bool ContainsPositiveInfinity(Boundsd b){
+			return ContainsPositiveInfinity(b.center) || ContainsPositiveInfinity(b.extents);
+		}
+		public static bool ContainsPositiveInfinity(Vector3d v){
+			return double.IsPositiveInfinity(v.x) || double.IsPositiveInfinity(v.y) || double.IsPositiveInfinity(v.z);
+		}
+		public static bool ContainsPositiveInfinity(Quaterniond q){
+			return double.IsPositiveInfinity(q.x) || double.IsPositiveInfinity(q.y) || double.IsPositiveInfinity(q.z) || double.IsPositiveInfinity(q.w);
+		}
+		public static bool ContainsPositiveInfinity(Rayd r){
+			return ContainsPositiveInfinity(r.origin) || ContainsPositiveInfinity(r.direction);
+		}
+		public static bool ContainsPositiveInfinity(Vector2d v){
+			return double.IsPositiveInfinity(v.x) || double.IsPositiveInfinity(v.y);
+		}
+		public static bool ContainsPositiveInfinity(double d){
+			return double.IsPositiveInfinity(d);
+		}
+		public static bool ContainsPositiveInfinity(params double[] values){
+			foreach(double value in values){
+				if(double.IsPositiveInfinity(value))
+					return true;
+			}
+			return false;
+		}
+		
+		public static bool ContainsPositiveInfinity (object obj)
+		{
+			if(obj == null){
+				return false;
+			}
+			if(obj is Bounds){
+				return ContainsPositiveInfinity((Bounds)obj);
+			} else if(obj is Vector3){
+				return ContainsPositiveInfinity((Vector3)obj);
+			} else if(obj is Quaternion){
+				return ContainsPositiveInfinity((Quaternion)obj);
+			} else if(obj is Ray){
+				return ContainsPositiveInfinity((Ray)obj);
+			} else if(obj is Vector2){
+				return ContainsPositiveInfinity((Vector2)obj);
+			} else if(obj is Single){
+				return ContainsPositiveInfinity((float)obj);
+			}
+			
+			if(obj is Boundsd){
+				return ContainsPositiveInfinity((Boundsd)obj);
+			} else if(obj is Vector3d){
+				return ContainsPositiveInfinity((Vector3d)obj);
+			} else if(obj is Quaterniond){
+				return ContainsPositiveInfinity((Quaterniond)obj);
+			} else if(obj is Rayd){
+				return ContainsPositiveInfinity((Rayd)obj);
+			} else if(obj is Vector2d){
+				return ContainsPositiveInfinity((Vector2d)obj);
+			} else if(obj is Double){
+				return ContainsPositiveInfinity((double)obj);
+			}
+			
+			Debug.LogError("ContainsPositiveInfinity couldn't resolve: Unknown object type: " + obj.GetType() + " (obj='" + obj + "')");
+			return false;
+		}
+		public static bool ContainsPositiveInfinity (params object[] objects)
+		{
+			foreach(object obj in objects){
+				if(ContainsPositiveInfinity(obj))
+					return true;
+			}
+			return false;
+		}
+
+		public static bool ContainsNegativeInfinity(Bounds b){
+			return ContainsNegativeInfinity(b.center) || ContainsNegativeInfinity(b.extents);
+		}
+		public static bool ContainsNegativeInfinity(Vector3 v){
+			return float.IsNegativeInfinity(v.x) || float.IsNegativeInfinity(v.y) || float.IsNegativeInfinity(v.z);
+		}
+		public static bool ContainsNegativeInfinity(Quaternion q){
+			return float.IsNegativeInfinity(q.x) || float.IsNegativeInfinity(q.y) || float.IsNegativeInfinity(q.z) || float.IsNegativeInfinity(q.w);
+		}
+		public static bool ContainsNegativeInfinity(Ray r){
+			return ContainsNegativeInfinity(r.origin) || ContainsNegativeInfinity(r.direction);
+		}
+		public static bool ContainsNegativeInfinity(Vector2 v){
+			return float.IsNegativeInfinity(v.x) || float.IsNegativeInfinity(v.y);
+		}
+		public static bool ContainsNegativeInfinity(float f){
+			return float.IsNegativeInfinity(f);
+		}
+		public static bool ContainsNegativeInfinity(params float[] values){
+			foreach(float value in values){
+				if(float.IsNegativeInfinity(value))
+					return true;
+			}
+			return false;
+		}
+		
+		public static bool ContainsNegativeInfinity(Boundsd b){
+			return ContainsNegativeInfinity(b.center) || ContainsNegativeInfinity(b.extents);
+		}
+		public static bool ContainsNegativeInfinity(Vector3d v){
+			return double.IsNegativeInfinity(v.x) || double.IsNegativeInfinity(v.y) || double.IsNegativeInfinity(v.z);
+		}
+		public static bool ContainsNegativeInfinity(Quaterniond q){
+			return double.IsNegativeInfinity(q.x) || double.IsNegativeInfinity(q.y) || double.IsNegativeInfinity(q.z) || double.IsNegativeInfinity(q.w);
+		}
+		public static bool ContainsNegativeInfinity(Rayd r){
+			return ContainsNegativeInfinity(r.origin) || ContainsNegativeInfinity(r.direction);
+		}
+		public static bool ContainsNegativeInfinity(Vector2d v){
+			return double.IsNegativeInfinity(v.x) || double.IsNegativeInfinity(v.y);
+		}
+		public static bool ContainsNegativeInfinity(double d){
+			return double.IsNegativeInfinity(d);
+		}
+		public static bool ContainsNegativeInfinity(params double[] values){
+			foreach(double value in values){
+				if(double.IsNegativeInfinity(value))
+					return true;
+			}
+			return false;
+		}
+		
+		public static bool ContainsNegativeInfinity (object obj)
+		{
+			if(obj == null){
+				return false;
+			}
+			if(obj is Bounds){
+				return ContainsNegativeInfinity((Bounds)obj);
+			} else if(obj is Vector3){
+				return ContainsNegativeInfinity((Vector3)obj);
+			} else if(obj is Quaternion){
+				return ContainsNegativeInfinity((Quaternion)obj);
+			} else if(obj is Ray){
+				return ContainsNegativeInfinity((Ray)obj);
+			} else if(obj is Vector2){
+				return ContainsNegativeInfinity((Vector2)obj);
+			} else if(obj is Single){
+				return ContainsNegativeInfinity((float)obj);
+			}
+			
+			if(obj is Boundsd){
+				return ContainsNegativeInfinity((Boundsd)obj);
+			} else if(obj is Vector3d){
+				return ContainsNegativeInfinity((Vector3d)obj);
+			} else if(obj is Quaterniond){
+				return ContainsNegativeInfinity((Quaterniond)obj);
+			} else if(obj is Rayd){
+				return ContainsNegativeInfinity((Rayd)obj);
+			} else if(obj is Vector2d){
+				return ContainsNegativeInfinity((Vector2d)obj);
+			} else if(obj is Double){
+				return ContainsNegativeInfinity((double)obj);
+			}
+			
+			Debug.LogError("ContainsNegativeInfinity couldn't resolve: Unknown object type: " + obj.GetType() + " (obj='" + obj + "')");
+			return false;
+		}
+		public static bool ContainsNegativeInfinity (params object[] objects)
+		{
+			foreach(object obj in objects){
+				if(ContainsNegativeInfinity(obj))
+					return true;
+			}
+			return false;
 		}
 	}
 }

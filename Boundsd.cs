@@ -13,7 +13,7 @@ public struct Boundsd
 
 	static void DoNegativeExtentsTest ()
 	{
-		//	This test proved that Unity's bounds implementation allowed negative extents and negative sizes.
+		//	This test proved that Unity's bounds implementation allowed negative extents (and negative sizes).
 		//	Which means that the minimum is allowed to be greater than the maximum.
 		//	I have since verified that this has the expected effect of making ALL of the subsequent calculations
 		//	completely screwy.
@@ -335,6 +335,13 @@ public struct Boundsd
 
 		//	There is nothing about this that I don't find bizarre and inexplicable.
 
+		//	Also it seems like it might do this with NaN results, too.
+
+		//	diff = NaN
+		//	NaN > extentsX ... yes or no?
+		//	if it fails, then ... of course. If I reversed the comparison, then ... no wait ... it wouldn't matter.
+		//	This *incidentally* ignores NaN values. I don't actually see a reason to change that.
+
 		double diff = pointX - centerX;
 		if(Mathd.Abs(diff) > extentsX){
 			double newExtentsX = (Mathd.Abs(diff) + extentsX) * 0.5d;
@@ -551,9 +558,32 @@ public struct Boundsd
 		return diff.sqrMagnitude;
 	}
 
+	public double SqrDistance (Vector3d point, out Vector3d diff)
+	{
+		diff = point - this.center;
+		diff.x = Math.Max(0d, Math.Abs(diff.x) - m_extents.x);
+		diff.y = Math.Max(0d, Math.Abs(diff.y) - m_extents.y);
+		diff.z = Math.Max(0d, Math.Abs(diff.z) - m_extents.z);
+		
+		return diff.sqrMagnitude;
+	}
+
 	public double SqrDistanceNotNaively (Vector3d point)
 	{
 		Vector3d diff = point - this.center;
+		//	Subtract the extents but cap at zero.
+		//	Do it naively. Assume extents are always positive.
+		//	Crap. No, I kind of need absolute values all the way around.
+		diff.x = Math.Max(0d, Math.Abs(diff.x) - Math.Abs (m_extents.x));
+		diff.y = Math.Max(0d, Math.Abs(diff.y) - Math.Abs (m_extents.y));
+		diff.z = Math.Max(0d, Math.Abs(diff.z) - Math.Abs (m_extents.z));
+		
+		return diff.sqrMagnitude;
+	}
+
+	public double SqrDistanceNotNaively (Vector3d point, out Vector3d diff)
+	{
+		diff = point - this.center;
 		//	Subtract the extents but cap at zero.
 		//	Do it naively. Assume extents are always positive.
 		//	Crap. No, I kind of need absolute values all the way around.

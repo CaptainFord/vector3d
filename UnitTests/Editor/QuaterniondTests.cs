@@ -18,10 +18,10 @@ namespace UnityTest {
 
 //		const double defaultToleranceFactor = 1.19209289550781E-07;
 
-		const int numberOfTestItems = 12;
-		const int expandedNumberOfTestItems = 256;
+		const int numberOfTestItems = 1;
+		const int expandedNumberOfTestItems = 12;
+		public TestItemSetCollection testItemSets;
 
-		TestItemSet[] testItemSets;
 		IDictionary<string,ComboInfo> combos = new SortedList<string, ComboInfo>();
 //		List<int> list = new List<int>();
 
@@ -43,15 +43,39 @@ namespace UnityTest {
 			}
 		}
 
+		public class TestItemSetCollection {
+			TestItemSet[] testItemSets;
+			QuaterniondTests parent;
 
-		public QuaterniondTests ()
+			public TestItemSetCollection (QuaterniondTests parent)
+			{
+				this.parent = parent;
+			}
+
+			public TestItemSet this[int index] {
+				get {
+					if(testItemSets == null){
+						testItemSets = parent.GenerateTestItemSets();
+					}
+					return testItemSets[index];
+				}
+			}
+		}
+
+		public QuaterniondTests() {
+			testItemSets = new TestItemSetCollection(this);
+		}
+
+		internal TestItemSet[] GenerateTestItemSets ()
 		{
 			System.Random rand = new System.Random("large traffic cones".GetHashCode());
 //			rand = new System.Random();
-			testItemSets = new TestItemSet[expandedNumberOfTestItems];
-			for(int i=0; i<expandedNumberOfTestItems; ++i){
+			int length = Math.Max (expandedNumberOfTestItems, numberOfTestItems);
+			TestItemSet[] testItemSets = new TestItemSet[length];
+			for(int i=0; i<length; ++i){
 				testItemSets[i] = GenerateTestItemSet(i, rand);
 			}
+			return testItemSets;
 		}
 
 		TestItemSet GenerateTestItemSet(int index, System.Random rand){
