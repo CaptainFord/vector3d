@@ -11,7 +11,8 @@ namespace UnityEngine {
         public const double NegativeInfinity = double.NegativeInfinity;
         public const double Deg2Rad = 0.01745329d;
         public const double Rad2Deg = 57.29578d;
-        public const double Epsilon = 1.401298E-45d;
+		public const double Epsilon = 1.401298E-45d;
+		public const double FloatPrecision = 1.19209289550781E-07;
 		public const double DoublePrecision = 2.22044604925031E-16d;	//	Minimum relative value. Anything smaller than this gets rounded off. In most cases, it might be useful to double this.
 		public const double DoublePrecisionMultiplier = 4503599627370500d;
 

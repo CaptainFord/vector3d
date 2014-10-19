@@ -11,7 +11,7 @@ namespace UnityTest {
 	{
 		const int numberOfTestItems = 30;
 		const int expandedNumberOfTestItems = 60;
-		const bool prenormalizeExtents = false;
+		bool prenormalizeExtents = false;
 		const bool useExtremeValuesInBoundsCenter = false;
 		const bool useExtremeValuesInBoundsExtents = false;
 		const bool useExtremeValuesInPoints = false;
@@ -228,6 +228,28 @@ namespace UnityTest {
 			}
 		}
 
+		[Test]
+		public void TestDoubleBits( 
+		                           [NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+		                           ){
+			TestItemSet set = testItemSets[testIndex];
+			double d0 = set.rand.NextDouble();
+			long bits0 = BitConverter.DoubleToInt64Bits(d0);
+			string binary = Convert.ToString(bits0, 2);
+			long bits1 = Convert.ToInt64(binary, 2);
+			double d1 = BitConverter.Int64BitsToDouble(bits1);
+
+			string message = ToStringUtil.DoubleBits(d0) + "\n" + binary.PadLeft(64,'0') + 
+					"\nd0: " + d0 + 
+					"\nbits0: " + bits0 + 
+					"\nbinary: " + binary + 
+					"\nbits1: " + bits1 + 
+					"\nd1: " + d1;
+
+			Assert.AreEqual(d0, d1, message);
+
+			Debug.Log (message);
+		}
 		[Test]
 		public void TestTestItems (
 			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
@@ -686,7 +708,7 @@ namespace UnityTest {
 
 			float f = fb.SqrDistance(set.fv0);
 			double d = db.SqrDistance(set.dv0, out diff);
-			double nonNaive = db.SqrDistanceNotNaively(set.dv0, out nonNaiveDiff);
+			 db.SqrDistanceNotNaively(set.dv0, out nonNaiveDiff);
 
 
 			string inputs = "Bounds: " + StrMultiline(set.db0, 2) + "\nPoint: " + Str (set.dv0);

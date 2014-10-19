@@ -794,6 +794,38 @@ namespace UnityTest {
 			}
 		}
 
+		//	These two are a bit different because they don't test against float-Quaternion methods
+		[Test]
+		public void TestInverseMultiplyVectors (
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			){
+			TestItemSet set = testItemSets[testIndex];
+
+			Quaterniond testQuaternion = set.dq0;
+			Vector3d testVector = set.dv0;
+
+			Vector3d result0 = testQuaternion.inverse * testVector;
+			Vector3d result1 = testQuaternion.InverseMultiply(testVector);
+
+			//	These might be the only tests where I can safely asssert that the results should be always identical
+			AssertSimilar(result0, result1, 0d);
+		}
+		[Test]
+		public void TestInverseMultiplyQuaternions (
+			[NUnit.Framework.Range (0,numberOfTestItems-1)] int testIndex
+			){
+			TestItemSet set = testItemSets[testIndex];
+			
+			Quaterniond testOperator = set.dq0;
+			Quaterniond testSubject = set.dq1;
+			
+			Quaterniond result0 = testOperator.inverse * testSubject;
+			Quaterniond result1 = testOperator.InverseMultiply(testSubject);
+			
+			//	These might be the only tests where I can safely asssert that the results should be always identical
+			AssertSimilar(result0, result1, 0d);
+		}
+
 		//	********************************
 		//	Utility functions used for tests
 		//	********************************

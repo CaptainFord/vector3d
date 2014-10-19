@@ -20,7 +20,7 @@ public struct Boundsd
 		//	But a simple naive implementation isn't enough to account for all the discrepancies. I need to
 		//	test what happens with NaN and infinity values.
 
-		Vector3 v3 = new Vector3();
+//		Vector3 v3 = new Vector3();
 		
 		Bounds b = new Bounds();
 		b.center = Vector3.zero;

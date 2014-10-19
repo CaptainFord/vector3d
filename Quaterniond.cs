@@ -6,152 +6,6 @@ namespace UnityEngine {
 	public struct Quaterniond {
 		public const string defaultNumberFormat = "G5";
 
-		public static void scratchGrounds(){
-//			Quaternion q = new Quaternion();
-//			UnityTest.QuaterniondTests tests = UnityTest.QuaterniondTests();
-//			System.Random rand = new System.Random("Nothing at all".GetHashCode());
-//			Quaterniond qd0 = RandomQuat(rand);
-//			Quaterniond qd1 = RandomQuat(rand);
-
-//			Debug.Log ("quats: " + qd0 + " " + qd1);
-//			for(int i=0; i<4; ++i){
-//				bool aFirst = i > 1;
-//				bool inverseA = i % 2 == 0;
-//				QuaternionDiffTest(qd0, qd1, aFirst, inverseA);
-//			}
-//
-//			for(int i=0; i<4; ++i){
-//				bool aFirst = i > 1;
-//				bool checkFirst = i % 2 == 0;
-//				QuaternionDiffTest2(qd0, qd1, aFirst, checkFirst);
-//			}
-
-//			Debug.Log (Convert.ToString(BitConverter.DoubleToInt64Bits(0.0),2) + "\n" 
-//			           + Convert.ToString(BitConverter.DoubleToInt64Bits(0.0 / 1.0),2));
-//			Vector3dEqualsInvestigation();
-//			QuaternionEqualsInvestigation();
-
-			Quaternion q = new Quaternion(-0.4850f, 0.3952f, -0.6186f, -0.4753f);
-			Debug.Log ("q.eulerAngles=" + q.eulerAngles + "\n" + new Quaterniond(q).eulerAngles);
-		}
-		static void Vector3dEqualsInvestigation(){
-			TestVector3Equals(0,0,0);
-			TestVector3Equals(1,1,1);
-
-		}
-		static void TestVector3Equals(double x, double y, double z){
-			Vector3d dv0 = new Vector3d(x,y,z);
-			Vector3d dv1 = new Vector3d(x,y,z);
-			Vector3 fv0 = (Vector3)dv0;
-			Vector3 fv1 = (Vector3)dv1;
-
-			Debug.Log (EqualsMessage(dv0, dv1) + "\n" + EqualsMessage(fv0, fv1));
-
-
-		}
-		static string EqualsMessage(Vector3d a, Vector3d b){
-			return (a == b) + " = (" + a + " == " + b + ") = " + (a.Equals(b));
-		}
-		static string EqualsMessage(Vector3 a, Vector3 b){
-			return (a == b) + " = (" + a + " == " + b + ") = " + (a.Equals(b));
-		}
-		static void LogEquals(Vector3 a, Vector3 b){
-			Debug.Log ((a == b) + " = (" + a + " == " + b + ")");
-		}
-		static void LogEquals(object a, object b){
-			Debug.Log ((a == b) + " = (" + a + " == " + b + ")");
-		}
-		
-		static void QuaternionEqualsInvestigation(){
-//			QuaternionEqualsInvestigation(1f, 1f, 1f, 1f);
-//			Quaternion minEquivalent;
-//			Quaternion maxEquivalent;
-
-
-		}
-
-		public static void QuaternionDiffTest2(Quaterniond a, Quaterniond b, bool aFirst, bool checkFirst){
-			Quaterniond stepOne = aFirst ? a.inverse * b : b * a.inverse;
-			string labelOne = aFirst ? "(!a*b)" : "(b*!a)";
-
-			Quaterniond stepTwo = checkFirst ? a * stepOne : stepOne * a;
-			string labelTwo = checkFirst ? "a*" + labelOne : labelOne + "*a";
-			
-			Quaterniond stepThree = checkFirst ? b * stepOne : stepOne * b;
-			string labelThree = checkFirst ? "b*" + labelOne : labelOne + "*b";
-
-			Debug.Log (labelTwo + ": " + stepTwo + " - " + b + "\n" + labelThree + ": " + stepThree + " - " + a);
-		}
-		public static void QuaternionDiffTest(Quaterniond a, Quaterniond b, bool aFirst, bool inverseFirst){
-			bool inverseA = inverseFirst ^ !aFirst;
-			string labelA = "a", labelB = "b";
-			if(inverseA){
-				a = Quaterniond.Inverse(a);
-				labelA = "!a";
-			} else {
-				b = Quaterniond.Inverse(b);
-				labelB = "!b";
-			}
-			if(aFirst){
-				QuaternionDiffTestFinish(a, b, labelA, labelB);
-			} else {
-				QuaternionDiffTestFinish(b, a, labelB, labelA);
-			}
-		}
-		public static void QuaternionDiffTestFinish(Quaterniond a, Quaterniond b, string labelA, string labelB){
-			Quaterniond result = a * b;
-			Debug.Log (labelA + "*" + labelB + "=" + result);
-		}
-			
-			public static Quaterniond RandomQuat(System.Random rand){
-			Quaterniond result = new Quaterniond();
-			for(int i=0; i<4; ++i){
-				result[i] = 2d * rand.NextDouble() - 1d;
-			}
-			return result;
-		}
-		public static void scratchGroundsNotRan(){
-			Quaternion q = new Quaternion();
-			Quaternion q2 = new Quaternion();
-			Vector3 v3 = new Vector3();
-			Object obj = new Object();
-			float f = 0f;
-
-			Debug.Log (Quaternion.identity);
-			Debug.Log (Quaternion.identity.w);
-			
-			q.RegisterInterest(obj);	//	Unnecessary
-			q.UnregisterInterest(obj);	//	Unnecessary
-			q.GetHashCode();			//	Unnecessary (probably)
-			q.SerializeToString();		//	Unnecessary
-			q.SerializeXml();			//	Unnecessary
-
-			q.Equals(q2);		//	Unnecessary (but implemented one for Quaternion)
-			q.ToString();		//	Implemented
-			q.Set(0f,0f,0f,1f);	//	Implemented
-
-			v3 = q.eulerAngles;
-			q.SetFromToRotation(v3, v3);
-			q.SetLookRotation(v3);
-			q.SetLookRotation(v3, v3);
-			q.ToAngleAxis(out f, out v3);
-
-//			q = Quaternion.Merge(v3);	//	Not documented. Hmm... wait, that's an extension method from Radical. Ignore it.
-
-			//	Static methods - Mostly constructors
-			f = Quaternion.Angle(q, q2);
-			q = Quaternion.AngleAxis(f, v3);
-			f = Quaternion.Dot(q, q2);
-			q = Quaternion.Euler(v3);
-			q = Quaternion.FromToRotation(v3, v3);
-//			q = Quaternion.identity;	//	Implemented
-			q2 = Quaternion.Inverse(q);
-			q = Quaternion.Lerp(q, q2, f);
-			q = Quaternion.LookRotation(v3);
-			q = Quaternion.RotateTowards(q, q2, f);
-			q = Quaternion.Slerp(q, q2, f);
-		}
-
 		public static Quaterniond identity {
 			get {
 				return new Quaterniond(0d,0d,0d,1d);
@@ -252,8 +106,8 @@ namespace UnityEngine {
 		}
 
 		public void SetFromToRotation(Vector3d from, Vector3d to){
-			from = from.normalized;
-			to = to .normalized;
+//			from = from.normalized;
+//			to = to .normalized;
 			Vector3d axis = Vector3d.Cross(from, to);
 			this.x = axis.x;
 			this.y = axis.y;
@@ -648,6 +502,10 @@ namespace UnityEngine {
 			return result;
 		}
 		public static Quaterniond Inverse(Quaterniond rotation){
+			//	The inverse flips the sign of either the w-component or all the others.
+			//	Unity appears to normalize all quaternions to have a positive w-component, though.
+			//	(Because the negative of a quaternion is literally identical. If w is defined to
+			//	be always positive, then it becomes easier to compare two quaternions for equality)
 			Quaterniond result = new Quaterniond();
 			result.x = -rotation.x;
 			result.y = -rotation.y;
@@ -808,6 +666,25 @@ namespace UnityEngine {
 				rhs.x * (xz - yw) 		+ rhs.y * (yz + xw) 	+ rhs.z * (1 - xx - yy)
 				);
 		}
+		public Quaterniond InverseMultiply(Quaterniond rhs) {
+			//	According to the definition of Inverse, the sign of all 'this' components
+			//	other than 'w' are flipped.
+			Quaterniond result = new Quaterniond();
+			result.w = this.w * rhs.w + this.x*rhs.x + this.y*rhs.y + this.z*rhs.z;
+			result.x = this.w * rhs.x - this.x*rhs.w - this.y*rhs.z + this.z*rhs.y;
+			result.y = this.w * rhs.y + this.x*rhs.z - this.y*rhs.w - this.z*rhs.x;
+			result.z = this.w * rhs.z - this.x*rhs.y + this.y*rhs.x - this.z*rhs.w;
+			return result;
+		}
+		public Quaterniond InverseMultiply(Quaternion rhs) {
+			Quaterniond result = new Quaterniond();
+			result.w = this.w * rhs.w + this.x*rhs.x + this.y*rhs.y + this.z*rhs.z;
+			result.x = this.w * rhs.x - this.x*rhs.w - this.y*rhs.z + this.z*rhs.y;
+			result.y = this.w * rhs.y + this.x*rhs.z - this.y*rhs.w - this.z*rhs.x;
+			result.z = this.w * rhs.z - this.x*rhs.y + this.y*rhs.x - this.z*rhs.w;
+			return result;
+		}
+
 //		Vector3d MultiplyOld(Vector3d rhs){
 //			double[,] rotationMatrix = new double[,] {
 //				{1 - 2*y*y - 2*z*z,	2*x*y - 2*z*w,	2*x*z + 2*y*w},
